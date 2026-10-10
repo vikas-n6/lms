@@ -1,0 +1,34 @@
+# Build output
+target/
+build/
+dist/
+out/
+
+# Maven wrapper distribution cache (keep the scripts and properties)
+.mvn/wrapper/*.jar
+
+# Node / frontend
+node_modules/
+admin-ui/dist/
+*.local
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+*.tmp
+
+# jqwik run database (test cache)
+.jqwik-database
+
+# Secrets / local env
+.env
+!.env.example

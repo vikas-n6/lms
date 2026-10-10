@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.lms</groupId>
+  <artifactId>lms-bom</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>Micro-Loan LMS :: Internal BOM</name>
+  <description>Manages the versions of every internal com.lms platform and contract module.</description>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.lms</groupId>
+        <artifactId>lms-money</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.lms</groupId>
+        <artifactId>lms-concurrency</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.lms</groupId>
+        <artifactId>lms-config</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.lms</groupId>
+        <artifactId>lms-events</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.lms</groupId>
+        <artifactId>lms-testkit</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
