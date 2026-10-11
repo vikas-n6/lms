@@ -2,10 +2,15 @@
 
 Tracked deferrals and TODOs. Every `TODO` in code must have a matching line here.
 
-## Deferred: needs a container runtime (Docker/Compose) — Phase 0
+> **Decision (Phase 0):** this machine has no Docker. Every container-dependent item below is
+> **authored but not executed**, and execution is **batched into one session after all phases are
+> built** — not run per phase. Phase tags are created when the Docker-independent work is green, with
+> the container DoD items annotated as deferred.
 
-These are authored but cannot run on this machine (no Docker). Run them in a session with Docker and
-record results (ADR 0001 for the smoke tests).
+## Deferred: needs a container runtime (Docker/Compose) — run after all phases
+
+These are authored but cannot run on this machine (no Docker). Run them in the final Docker session
+and record results (ADR 0001 for the smoke tests). This list grows per phase.
 
 - [ ] ADR 0001 smoke tests: Kafka 4.3.1 broker + clients on JDK 25 (Testcontainers).
 - [ ] ADR 0001 smoke tests: Confluent Schema Registry 8.3.2 + Avro 1.12.2 serde round-trip.
