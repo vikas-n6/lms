@@ -53,6 +53,7 @@
     <module>lms-bom</module>
     <module>platform/lms-money</module>
     <module>platform/lms-concurrency</module>
+    <module>platform/lms-config</module>
   </modules>
 
   <dependencyManagement>
