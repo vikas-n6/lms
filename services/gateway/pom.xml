@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.lms</groupId>
+    <artifactId>lms-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>gateway</artifactId>
+  <name>Micro-Loan LMS :: Service :: Gateway</name>
+  <description>Edge gateway: routing, JWT validation, Redis rate limiting, status aggregation.</description>
+
+  <properties>
+    <jib.version>3.4.4</jib.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-gateway-server-webmvc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-observability</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-testkit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>com/lms/gateway/GatewayApplication*</exclude>
+            <exclude>com/lms/gateway/config/*</exclude>
+            <exclude>com/lms/gateway/status/RestClientServiceHealthProbe*</exclude>
+            <exclude>com/lms/gateway/ratelimit/RedisRateLimiter*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>${jib.version}</version>
+        <configuration>
+          <from><image>eclipse-temurin:25-jre</image></from>
+          <to><image>lms/gateway:${project.version}</image></to>
+          <container>
+            <user>1000:1000</user>
+            <ports><port>8080</port></ports>
+          </container>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

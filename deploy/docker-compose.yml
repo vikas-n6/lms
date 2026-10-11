@@ -1,0 +1,246 @@
+# Local infrastructure and apps, split by profile (docs/architecture.md).
+#   core | auth | workflow | observability | apps | ui | full
+# Usage: docker compose --profile core up -d   (or the scripts/ wrapper / Makefile)
+#
+# This file is authored for a Docker-enabled session. It has not been run on the machine that
+# generated it (no Docker there); see docs/backlog.md.
+
+name: lms
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  # ---------------------------------------------------------------- core
+  postgres:
+    image: postgres:17-alpine
+    profiles: [core, apps, full]
+    <<: *restart
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # One database + least-privilege role per service.
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  kafka:
+    image: apache/kafka:4.0.0
+    profiles: [core, apps, full]
+    <<: *restart
+    ports: ["9092:9092"]
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,INTERNAL://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://kafka:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # Creates every topic in the catalogue (+ retry/DLT variants), then exits.
+  kafka-init:
+    image: apache/kafka:4.0.0
+    profiles: [core, apps, full]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "/init/create-topics.sh"]
+    environment:
+      BOOTSTRAP: kafka:19092
+      PARTITIONS: "6"
+      REPLICATION: "1"
+    volumes:
+      - ./compose/kafka-init:/init:ro
+    restart: "no"
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:8.3.2
+    profiles: [core, apps, full]
+    <<: *restart
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports: ["8081:8081"]
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:19092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: backward
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/subjects || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    profiles: [core, apps, full]
+    <<: *restart
+    ports: ["6379:6379"]
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    profiles: [core, full]
+    <<: *restart
+    depends_on: [kafka, schema-registry]
+    ports: ["8089:8080"]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: lms
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+      DYNAMIC_CONFIG_ENABLED: "true"
+
+  # ---------------------------------------------------------------- auth
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    profiles: [auth, full]
+    <<: *restart
+    command: ["start-dev", "--import-realm", "--http-port=8080"]
+    ports: ["8180:8080"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  # ------------------------------------------------------------ workflow
+  temporal:
+    image: temporalio/temporal:latest
+    profiles: [workflow, full]
+    <<: *restart
+    command: ["server", "start-dev", "--ip", "0.0.0.0", "--ui-port", "8233"]
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+
+  # ------------------------------------------------------- observability
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    profiles: [observability, full]
+    <<: *restart
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./observability/otel-collector-config.yaml:/etc/otel/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+
+  prometheus:
+    image: prom/prometheus:latest
+    profiles: [observability, full]
+    <<: *restart
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+
+  loki:
+    image: grafana/loki:latest
+    profiles: [observability, full]
+    <<: *restart
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports: ["3100:3100"]
+
+  tempo:
+    image: grafana/tempo:latest
+    profiles: [observability, full]
+    <<: *restart
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo/tempo.yaml:ro
+    ports: ["3200:3200"]
+
+  grafana:
+    image: grafana/grafana:latest
+    profiles: [observability, full]
+    <<: *restart
+    depends_on: [prometheus, loki, tempo]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports: ["3000:3000"]
+
+  # ------------------------------------------------------------- apps
+  customer:
+    image: lms/customer:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8101
+      DB_URL: jdbc:postgresql://postgres:5432/customer
+      DB_USER: customer
+      DB_PASSWORD: ${CUSTOMER_DB_PASSWORD:-customer}
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8101:8101"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8101/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  gateway:
+    image: lms/gateway:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on: [customer, redis]
+    environment:
+      SERVER_PORT: 8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      CUSTOMER_URI: http://customer:8101
+    ports: ["8080:8080"]
+
+  # ------------------------------------------------------------- ui
+  admin-ui:
+    image: lms/admin-ui:0.1.0-SNAPSHOT
+    profiles: [ui, full]
+    <<: *restart
+    depends_on: [gateway]
+    ports: ["3002:8080"]
+
+volumes:
+  pgdata:

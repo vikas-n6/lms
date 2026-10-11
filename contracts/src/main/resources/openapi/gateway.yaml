@@ -1,0 +1,126 @@
+openapi: 3.1.0
+info:
+  title: LMS Gateway API
+  version: 0.1.0
+  description: >
+    Edge API exposed by the gateway. All service traffic for the Admin UI is routed and aggregated
+    here. Phase 0 covers customer routing and the status aggregation endpoint.
+servers:
+  - url: http://localhost:8080
+    description: Local gateway
+security:
+  - bearerAuth: []
+paths:
+  /api/customers:
+    post:
+      summary: Register a customer (routed to the customer service)
+      operationId: createCustomer
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /api/customers/{id}:
+    get:
+      summary: Fetch a customer by id (routed to the customer service)
+      operationId: getCustomer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: The customer
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Customer' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/status:
+    get:
+      summary: Aggregated health of every service
+      operationId: getStatus
+      responses:
+        '200':
+          description: Per-service health snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StatusReport' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string }
+      description: Required on every state-changing request (docs/domain-rules.md).
+  responses:
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Authenticated but not authorised
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Problem:
+      description: RFC 9457 problem detail
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    CreateCustomerRequest:
+      type: object
+      required: [fullName, phone, dateOfBirth]
+      properties:
+        fullName: { type: string }
+        phone: { type: string, description: E.164 phone; never logged in plaintext }
+        dateOfBirth: { type: string, format: date }
+    Customer:
+      type: object
+      required: [id, displayName, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        status: { type: string, enum: [REGISTERED] }
+        createdAt: { type: string, format: date-time }
+    StatusReport:
+      type: object
+      properties:
+        services:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              status: { type: string, enum: [UP, DOWN, UNKNOWN] }
+    Problem:
+      type: object
+      description: RFC 9457 problem detail
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }

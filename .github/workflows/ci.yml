@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      # ubuntu-latest ships Docker, so Testcontainers (*IT) run here. Fail fast if it is missing.
+      - name: Verify Docker is available for Testcontainers
+        run: docker version
+
+      - name: Build and verify (Spotless, enforcer, ArchUnit, coverage, unit + IT, Admin UI)
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: 'false'
+        run: ./mvnw -B -ntp -Pui clean verify
+
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/failsafe-reports/**
+            **/target/site/jacoco/**
+          retention-days: 7

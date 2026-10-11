@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "CustomerRegistered",
+  "namespace": "com.lms.contracts.customer",
+  "doc": "Published on customer.events when a customer is registered. Payload carries no plaintext PII.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "customerId", "type": "string", "doc": "UUIDv7 of the customer aggregate" },
+    { "name": "displayName", "type": "string", "doc": "Non-PII display label (e.g. given name only)" },
+    {
+      "name": "registeredAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" },
+      "doc": "UTC instant the customer was registered"
+    }
+  ]
+}
