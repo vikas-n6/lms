@@ -71,6 +71,7 @@
     <module>platform/lms-outbox</module>
     <module>platform/lms-testkit</module>
     <module>contracts</module>
+    <module>services/customer</module>
   </modules>
 
   <dependencyManagement>
@@ -148,6 +149,12 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
         <version>1.28.0</version>
+      </dependency>
+      <!-- Convergence pin: guava (via Confluent) vs postgresql disagree on checker-qual -->
+      <dependency>
+        <groupId>org.checkerframework</groupId>
+        <artifactId>checker-qual</artifactId>
+        <version>3.55.1</version>
       </dependency>
 
       <!-- Kafka clients pinned to 4.x (KRaft), overriding the Boot-managed version (ADR 0001) -->
