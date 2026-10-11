@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.lms</groupId>
+    <artifactId>lms-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>origination</artifactId>
+  <name>Micro-Loan LMS :: Service :: Origination</name>
+  <description>Reference hexagonal service: origination registration with outbox-published events.</description>
+
+  <properties>
+    <jib.version>3.4.4</jib.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>contracts</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-events</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-outbox</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-observability</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-config</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-testkit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Avro 1.12 trusted packages for serde in unit tests (ADR 0004). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <org.apache.avro.SERIALIZABLE_PACKAGES>com.lms.contracts</org.apache.avro.SERIALIZABLE_PACKAGES>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+
+      <!-- Infra that needs Postgres/Kafka or is pure wiring is covered by ITs (deferred to Docker). -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>com/lms/origination/OriginationApplication*</exclude>
+            <exclude>com/lms/origination/config/*</exclude>
+            <exclude>com/lms/origination/adapters/out/persistence/*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <!-- Non-root container image via Jib (not bound to a phase; run with `mvn jib:dockerBuild`). -->
+      <plugin>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>${jib.version}</version>
+        <configuration>
+          <from>
+            <image>eclipse-temurin:25-jre</image>
+          </from>
+          <to>
+            <image>lms/origination:${project.version}</image>
+          </to>
+          <container>
+            <user>1000:1000</user>
+            <ports>
+              <port>8102</port>
+            </ports>
+            <jvmFlags>
+              <jvmFlag>-XX:MaxRAMPercentage=75</jvmFlag>
+              <jvmFlag>-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts</jvmFlag>
+            </jvmFlags>
+          </container>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

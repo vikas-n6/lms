@@ -75,7 +75,9 @@
     <module>contracts</module>
     <module>services/customer</module>
     <module>services/gateway</module>
-  </modules>
+    <module>services/origination</module>
+  <module>services/decision</module>
+</modules>
 
   <dependencyManagement>
     <dependencies>
@@ -397,7 +399,9 @@
       <id>ui</id>
       <modules>
         <module>admin-ui</module>
-      </modules>
+        <module>services/origination</module>
+  <module>services/decision</module>
+</modules>
     </profile>
   </profiles>
 </project>
