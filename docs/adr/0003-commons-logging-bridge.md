@@ -20,21 +20,26 @@ rogue logging implementation, everything via SLF4J — is still correct and achi
 
 ## Decision
 
-Keep the enforcer ban unchanged (it is not weakened). In every module that depends on Spring:
+Keep the enforcer ban unchanged (it is not weakened). The fix has two parts:
 
-1. Exclude `commons-logging:commons-logging` from each Spring dependency (compile and test).
-2. Add `org.slf4j:jcl-over-slf4j` (version managed by the Spring Boot BOM), which provides the
-   `org.apache.commons.logging` API but routes it to SLF4J.
+1. **One central exclusion.** The parent POM manages `org.springframework:spring-core` (version
+   `${spring-framework.version}`, tracking the Boot-managed release) with an `<exclusions>` entry for
+   `commons-logging:commons-logging`. Because real commons-logging only ever enters the tree through
+   `spring-core`, managing `spring-core` with that exclusion removes it from **every** transitive
+   path — verified: enforcer `bannedDependencies` passes across `lms-config` and `lms-security` with
+   no per-artifact exclusions. (Maven applies the exclusion wherever the managed `spring-core`
+   coordinate is resolved.)
+2. **Bridge JCL to SLF4J.** Each Spring-using module adds `org.slf4j:jcl-over-slf4j` (version from
+   the Boot BOM), which supplies the `org.apache.commons.logging` API routed to SLF4J.
 
-This removes the banned implementation and still bridges JCL into SLF4J, which is exactly what the
-rule was protecting. `jcl-over-slf4j` (groupId `org.slf4j`) is not on the ban list.
-
-Maven has no global transitive exclusion, so the exclusion is declared per Spring dependency. Pure
-modules with no Spring dependency (`lms-money`, `lms-concurrency`) stay bridge-free.
+This removes the banned implementation and still bridges JCL into SLF4J. `jcl-over-slf4j` (groupId
+`org.slf4j`) is not on the ban list. Pure modules with no Spring dependency (`lms-money`,
+`lms-concurrency`) stay bridge-free.
 
 ## Consequences
 
-- Every Spring-using POM carries the exclusion + the `jcl-over-slf4j` dependency. `new-service.sh`
-  and the reference `customer` service bake this in so it is copied, not re-derived.
-- If a future Spring/Boot release reinstates a bundled JCL bridge, this can be simplified (revisit).
+- No per-dependency `commons-logging` exclusions are needed anywhere; services just add
+  `jcl-over-slf4j`. `new-service.sh` and the reference `customer` service bake that in.
+- If `spring-framework.version` drifts from the Boot-managed version the managed entry must be
+  updated (the enforcer `dependencyConvergence` rule will flag a mismatch).
 - The build stays green under `bannedDependencies` without disabling or narrowing the rule.

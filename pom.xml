@@ -24,6 +24,7 @@
 
     <!-- Versions NOT governed by the Spring Boot BOM -->
     <spring-boot.version>4.1.1</spring-boot.version>
+    <spring-framework.version>7.0.9</spring-framework.version>
     <temporal.version>1.40.0</temporal.version>
     <avro.version>1.12.2</avro.version>
     <confluent.version>8.3.2</confluent.version>
@@ -65,6 +66,7 @@
     <module>platform/lms-concurrency</module>
     <module>platform/lms-config</module>
     <module>platform/lms-events</module>
+    <module>platform/lms-security</module>
     <module>platform/lms-testkit</module>
     <module>contracts</module>
   </modules>
@@ -87,6 +89,24 @@
         <version>${spring-boot.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+
+      <!--
+        Spring 7 reintroduced a hard dependency from spring-core onto the banned
+        commons-logging (ADR 0003). Managing spring-core here with the exclusion removes it from
+        every transitive path, so individual Spring dependencies need no per-artifact exclusion.
+        Version tracks the Boot-managed Spring Framework release (${spring-framework.version}).
+      -->
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>${spring-framework.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Testcontainers BOM -->
