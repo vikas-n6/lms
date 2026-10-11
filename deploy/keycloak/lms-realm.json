@@ -1,0 +1,79 @@
+{
+  "realm": "lms",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      { "name": "ADMIN", "description": "Back-office administrator" },
+      { "name": "ANALYST", "description": "Credit/operations analyst" },
+      { "name": "CUSTOMER", "description": "End customer" }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@lms.local",
+      "firstName": "Ada",
+      "lastName": "Admin",
+      "credentials": [ { "type": "password", "value": "admin", "temporary": false } ],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "analyst",
+      "enabled": true,
+      "email": "analyst@lms.local",
+      "firstName": "Ana",
+      "lastName": "Analyst",
+      "credentials": [ { "type": "password", "value": "analyst", "temporary": false } ],
+      "realmRoles": ["ANALYST"]
+    },
+    {
+      "username": "customer1",
+      "enabled": true,
+      "email": "customer1@lms.local",
+      "firstName": "Chai",
+      "lastName": "Customer",
+      "credentials": [ { "type": "password", "value": "customer1", "temporary": false } ],
+      "realmRoles": ["CUSTOMER"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "admin-ui",
+      "name": "Admin UI (public, PKCE)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:3002/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": ["+"],
+      "attributes": { "pkce.code.challenge.method": "S256" }
+    },
+    {
+      "clientId": "gateway",
+      "name": "Gateway (confidential)",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "gateway-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true
+    },
+    {
+      "clientId": "customer",
+      "name": "Customer service (confidential, client credentials)",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "customer-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false
+    }
+  ]
+}
