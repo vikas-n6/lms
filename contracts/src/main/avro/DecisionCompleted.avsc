@@ -1,0 +1,22 @@
+{
+  "type": "record",
+  "name": "DecisionCompleted",
+  "namespace": "com.lms.contracts.decision",
+  "doc": "Published on decision.events when a decision is reached (or overridden on manual review). Origination consumes it to build or reject an offer. The full rule-by-rule breakdown is persisted and served by GET /decisions/{id}/explain; the event carries the outcome and the figures origination needs.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "decisionId", "type": "string" },
+    { "name": "applicationId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+    { "name": "outcome", "type": "string", "doc": "APPROVE / REJECT / REFER" },
+    { "name": "reasonCodes", "type": { "type": "array", "items": "string" } },
+    { "name": "ruleSetVersion", "type": "string", "doc": "Version of the rule set evaluated" },
+    { "name": "offeredLimit", "type": ["null", "com.lms.contracts.events.MoneyAmount"], "default": null, "doc": "Approved limit on APPROVE; null otherwise" },
+    { "name": "bureauScore", "type": ["null", "int"], "default": null, "doc": "Bureau score if the pull succeeded" },
+    { "name": "manualOverride", "type": "boolean", "default": false, "doc": "True when produced by an admin review override" },
+    {
+      "name": "decidedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

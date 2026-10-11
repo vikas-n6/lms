@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "CustomerKycCompleted",
+  "namespace": "com.lms.contracts.customer",
+  "doc": "Published on customer.events when KYC reaches a terminal result. No plaintext PII.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "customerId", "type": "string", "doc": "UUIDv7 of the customer aggregate" },
+    { "name": "status", "type": "string", "doc": "VERIFIED or FAILED (terminal)" },
+    {
+      "name": "completedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" },
+      "doc": "UTC instant KYC completed"
+    }
+  ]
+}

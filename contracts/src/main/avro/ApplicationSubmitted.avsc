@@ -1,0 +1,39 @@
+{
+  "type": "record",
+  "name": "ApplicationSubmitted",
+  "namespace": "com.lms.contracts.application",
+  "doc": "Published on application.events when an application is submitted. Carries a self-contained applicant snapshot so Decision never calls Customer synchronously (docs/architecture.md). No plaintext PII: the phone travels only as a keyed blind-index hash used for the velocity check.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "applicationId", "type": "string", "doc": "UUIDv7 of the application" },
+    { "name": "customerId", "type": "string", "doc": "UUIDv7 of the customer" },
+    { "name": "productId", "type": "string", "doc": "Product the application is priced against" },
+    { "name": "requestedAmount", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Requested principal" },
+    {
+      "name": "snapshot",
+      "doc": "Decisioning inputs captured at submit time; the event is self-contained.",
+      "type": {
+        "type": "record",
+        "name": "ApplicantSnapshot",
+        "fields": [
+          { "name": "ageYears", "type": "int", "doc": "Age in whole years at submit (computed from DOB with the injected Clock; DOB itself is not published)" },
+          { "name": "kycStatus", "type": "string", "doc": "VERIFIED / FAILED / PENDING at submit time" },
+          { "name": "bankAccountLinked", "type": "boolean" },
+          { "name": "declaredMonthlyIncome", "type": "com.lms.contracts.events.MoneyAmount" },
+          { "name": "employmentType", "type": "string", "doc": "SALARIED / SELF_EMPLOYED / OTHER" },
+          { "name": "existingMonthlyEmi", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Sum of existing EMIs with us (0 in Phase 1)" },
+          { "name": "activeLoanCount", "type": "int", "doc": "Active loans with us at submit" },
+          { "name": "phoneBlindIndex", "type": "string", "doc": "Keyed HMAC of the phone; non-PII velocity key" },
+          { "name": "dataProcessingConsent", "type": "boolean" },
+          { "name": "creditPullConsent", "type": "boolean" },
+          { "name": "loanAgreementConsent", "type": "boolean" }
+        ]
+      }
+    },
+    {
+      "name": "submittedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" },
+      "doc": "UTC instant the application was submitted"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "MoneyAmount",
+  "namespace": "com.lms.contracts.events",
+  "doc": "A money amount on the wire: long minor units plus an ISO 4217 currency code (docs/domain-rules.md 'Money type'). Scale is derived from the currency, never hard-coded.",
+  "fields": [
+    { "name": "minorUnits", "type": "long", "doc": "Amount in minor units (e.g. paise for INR)" },
+    { "name": "currency", "type": "string", "doc": "ISO 4217 code, e.g. INR" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "ApplicationRejected",
+  "namespace": "com.lms.contracts.application",
+  "doc": "Published on application.events when an application is rejected (decision REJECT, or a terminal failure). Reason codes mirror the decision's reason codes.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "applicationId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+    { "name": "reasonCodes", "type": { "type": "array", "items": "string" }, "doc": "e.g. BUREAU_SCORE_LOW" },
+    {
+      "name": "rejectedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

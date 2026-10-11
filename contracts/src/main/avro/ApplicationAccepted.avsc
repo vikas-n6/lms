@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "ApplicationAccepted",
+  "namespace": "com.lms.contracts.application",
+  "doc": "Published on application.events when the customer accepts an offer after an OTP e-sign. Carries the full accepted terms; loan-account consumes it in Phase 2.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "applicationId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+    { "name": "productId", "type": "string" },
+    { "name": "principal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "tenorMonths", "type": "int" },
+    { "name": "emi", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "fee", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "gst", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "netDisbursal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "effectiveAnnualRatePercent", "type": "string" },
+    { "name": "esignReference", "type": "string", "doc": "OTP e-sign reference recorded at acceptance" },
+    {
+      "name": "acceptedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

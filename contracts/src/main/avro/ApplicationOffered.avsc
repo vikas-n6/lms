@@ -1,0 +1,41 @@
+{
+  "type": "record",
+  "name": "ApplicationOffered",
+  "namespace": "com.lms.contracts.application",
+  "doc": "Published on application.events when an approved application is turned into an offer with one priced option per tenor (docs/domain-rules.md). Each option satisfies netDisbursal + fee + gst == principal.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "applicationId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+    { "name": "principal", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Approved principal (offered limit)" },
+    {
+      "name": "options",
+      "doc": "One priced option per offered tenor (3/6/9/12).",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "OfferOption",
+          "fields": [
+            { "name": "tenorMonths", "type": "int" },
+            { "name": "emi", "type": "com.lms.contracts.events.MoneyAmount" },
+            { "name": "fee", "type": "com.lms.contracts.events.MoneyAmount" },
+            { "name": "gst", "type": "com.lms.contracts.events.MoneyAmount" },
+            { "name": "netDisbursal", "type": "com.lms.contracts.events.MoneyAmount" },
+            { "name": "totalPayable", "type": "com.lms.contracts.events.MoneyAmount" },
+            { "name": "effectiveAnnualRatePercent", "type": "string", "doc": "Effective APR from cash flows, e.g. '28.1234'" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "offerExpiresAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" },
+      "doc": "UTC instant the offer expires (default 48h after offering)"
+    },
+    {
+      "name": "offeredAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

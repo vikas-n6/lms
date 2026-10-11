@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "CustomerBankAccountLinked",
+  "namespace": "com.lms.contracts.customer",
+  "doc": "Published on customer.events when a payout bank account is linked and penny-drop verified. Only a masked account number travels; the real number is encrypted at rest and never logged or published.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "customerId", "type": "string", "doc": "UUIDv7 of the customer aggregate" },
+    { "name": "bankAccountId", "type": "string", "doc": "UUIDv7 of the bank account record" },
+    { "name": "maskedAccountNumber", "type": "string", "doc": "e.g. XXXXXX1234 (non-PII)" },
+    { "name": "ifsc", "type": "string", "doc": "Bank/branch routing code (non-PII)" },
+    { "name": "pennyDropVerified", "type": "boolean", "doc": "True when the penny-drop check passed" },
+    {
+      "name": "linkedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" },
+      "doc": "UTC instant the account was linked"
+    }
+  ]
+}

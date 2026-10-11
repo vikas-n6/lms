@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "ApplicationExpired",
+  "namespace": "com.lms.contracts.application",
+  "doc": "Published on application.events when an unaccepted offer passes its expiry (default 48h). Emitted by a scheduled job.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "applicationId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+    {
+      "name": "expiredAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

@@ -43,6 +43,7 @@
               <!-- Shared types compiled first so typed events can reference them. -->
               <imports>
                 <import>${project.basedir}/src/main/avro/EventMetadata.avsc</import>
+                <import>${project.basedir}/src/main/avro/MoneyAmount.avsc</import>
               </imports>
               <stringType>String</stringType>
               <fieldVisibility>PRIVATE</fieldVisibility>
