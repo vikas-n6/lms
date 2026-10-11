@@ -67,6 +67,7 @@
     <module>platform/lms-config</module>
     <module>platform/lms-events</module>
     <module>platform/lms-security</module>
+    <module>platform/lms-observability</module>
     <module>platform/lms-testkit</module>
     <module>contracts</module>
   </modules>
