@@ -22,6 +22,23 @@ class MoneyTest {
     }
 
     @Test
+    void timesMultipliesByAWholeFactorWithOverflowCheck() {
+        assertThat(Money.of(1_500_000, INR).times(3)).isEqualTo(Money.of(4_500_000, INR));
+        assertThat(Money.of(100, INR).times(0)).isEqualTo(Money.zero(INR));
+        assertThatThrownBy(() -> Money.of(Long.MAX_VALUE, INR).times(2))
+                .isInstanceOf(ArithmeticException.class);
+    }
+
+    @Test
+    void minAndMaxPickTheExpectedAmount() {
+        Money small = Money.of(1_000, INR);
+        Money big = Money.of(5_000, INR);
+        assertThat(small.min(big)).isEqualTo(small);
+        assertThat(small.max(big)).isEqualTo(big);
+        assertThat(big.min(small)).isEqualTo(small);
+    }
+
+    @Test
     void negateAbsAndSignPredicates() {
         Money positive = Money.of(100, INR);
         Money negative = Money.of(-100, INR);

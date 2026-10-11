@@ -73,6 +73,21 @@ public record Money(long minorUnits, Currency currency) implements Comparable<Mo
         return new Money(Math.negateExact(minorUnits), currency);
     }
 
+    /** Multiply by a whole factor (e.g. a 3x income cap), overflow-checked. */
+    public Money times(long factor) {
+        return new Money(Math.multiplyExact(minorUnits, factor), currency);
+    }
+
+    /** The smaller of this and {@code other} (same currency). */
+    public Money min(Money other) {
+        return compareTo(other) <= 0 ? this : other;
+    }
+
+    /** The larger of this and {@code other} (same currency). */
+    public Money max(Money other) {
+        return compareTo(other) >= 0 ? this : other;
+    }
+
     public Money abs() {
         return minorUnits < 0 ? negate() : this;
     }
