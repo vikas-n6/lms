@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.lms</groupId>
+    <artifactId>lms-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>lms-schedule</artifactId>
+  <name>Micro-Loan LMS :: Platform :: Schedule</name>
+  <description>
+    Pure-Java product + reducing-balance schedule engine (EMI, offer quotes, foreclosure). Depends
+    only on lms-money. Origination quotes with it now; loan-account uses it in Phase 2.
+  </description>
+
+  <properties>
+    <!-- Strict coverage gate for the schedule/money path (CLAUDE.md "Maven conventions"). -->
+    <coverage.line.min>0.90</coverage.line.min>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-money</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.jqwik</groupId>
+      <artifactId>jqwik</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
