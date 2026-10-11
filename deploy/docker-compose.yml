@@ -240,7 +240,7 @@ services:
     profiles: [ui, full]
     <<: *restart
     depends_on: [gateway]
-    ports: ["3002:80"]
+    ports: ["3002:8080"]
 
 volumes:
   pgdata:

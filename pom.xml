@@ -388,4 +388,15 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- The Admin UI runs npm via frontend-maven-plugin; opt in with -Pui to keep the default
+         backend build fast and offline. CI builds it with `./mvnw -Pui verify`. -->
+    <profile>
+      <id>ui</id>
+      <modules>
+        <module>admin-ui</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>
