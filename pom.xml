@@ -64,6 +64,7 @@
     <module>platform/lms-money</module>
     <module>platform/lms-concurrency</module>
     <module>platform/lms-config</module>
+    <module>platform/lms-events</module>
     <module>contracts</module>
   </modules>
 
@@ -117,6 +118,32 @@
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>
         <version>${avro.version}</version>
+      </dependency>
+
+      <!-- Convergence pin: Avro 1.12.2 and Confluent 8.3.2 disagree on commons-compress -->
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>1.28.0</version>
+      </dependency>
+
+      <!-- Kafka clients pinned to 4.x (KRaft), overriding the Boot-managed version (ADR 0001) -->
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>${kafka.version}</version>
+      </dependency>
+
+      <!-- Confluent Avro serde + Schema Registry client -->
+      <dependency>
+        <groupId>io.confluent</groupId>
+        <artifactId>kafka-avro-serializer</artifactId>
+        <version>${confluent.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.confluent</groupId>
+        <artifactId>kafka-schema-registry-client</artifactId>
+        <version>${confluent.version}</version>
       </dependency>
 
       <!-- Temporal -->
