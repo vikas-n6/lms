@@ -1,0 +1,22 @@
+{
+  "type": "record",
+  "name": "EventMetadata",
+  "namespace": "com.lms.contracts.events",
+  "doc": "Common envelope carried by every event (docs/architecture.md Event contract). Backward-compatible changes only (Schema Registry BACKWARD mode).",
+  "fields": [
+    { "name": "eventId", "type": "string", "doc": "UUIDv7, unique; the idempotency key for consumers" },
+    { "name": "eventType", "type": "string", "doc": "e.g. customer.registered" },
+    { "name": "schemaVersion", "type": "int", "default": 1, "doc": "Payload schema version" },
+    {
+      "name": "occurredAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" },
+      "doc": "UTC instant from the injected Clock"
+    },
+    { "name": "aggregateType", "type": "string", "doc": "e.g. customer; also part of the Kafka key" },
+    { "name": "aggregateId", "type": "string", "doc": "Aggregate id; the Kafka key, so ordering is per aggregate" },
+    { "name": "correlationId", "type": "string", "doc": "Constant across a business flow" },
+    { "name": "causationId", "type": ["null", "string"], "default": null, "doc": "eventId of the event that caused this one" },
+    { "name": "traceId", "type": ["null", "string"], "default": null, "doc": "OpenTelemetry trace id" },
+    { "name": "producer", "type": "string", "doc": "Service name" }
+  ]
+}

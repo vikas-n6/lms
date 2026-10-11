@@ -42,18 +42,29 @@
     <enforcer.version>3.5.0</enforcer.version>
     <surefire.version>3.5.2</surefire.version>
     <compiler-plugin.version>3.14.0</compiler-plugin.version>
-    <avro-plugin.version>1.12.0</avro-plugin.version>
+    <avro-plugin.version>${avro.version}</avro-plugin.version>
     <frontend-plugin.version>1.15.1</frontend-plugin.version>
 
     <!-- Coverage gate: overridden to 0.90 in lms-money and the schedule engine -->
     <coverage.line.min>0.70</coverage.line.min>
   </properties>
 
+  <!-- Confluent repo for the Schema Registry client and Avro serializer (ADR 0001). -->
+  <repositories>
+    <repository>
+      <id>confluent</id>
+      <url>https://packages.confluent.io/maven/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
+
   <modules>
     <module>lms-bom</module>
     <module>platform/lms-money</module>
     <module>platform/lms-concurrency</module>
     <module>platform/lms-config</module>
+    <module>contracts</module>
   </modules>
 
   <dependencyManagement>

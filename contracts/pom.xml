@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.lms</groupId>
+    <artifactId>lms-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>contracts</artifactId>
+  <name>Micro-Loan LMS :: Contracts</name>
+  <description>
+    Avro event schemas (shared envelope + typed events) and OpenAPI specs. Services depend on the
+    generated jar, never on each other (docs/architecture.md).
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro-maven-plugin</artifactId>
+        <version>${avro-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>generate-avro</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+            </goals>
+            <configuration>
+              <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
+              <!-- Shared types compiled first so typed events can reference them. -->
+              <imports>
+                <import>${project.basedir}/src/main/avro/EventMetadata.avsc</import>
+              </imports>
+              <stringType>String</stringType>
+              <fieldVisibility>PRIVATE</fieldVisibility>
+              <createSetters>false</createSetters>
+              <enableDecimalLogicalType>true</enableDecimalLogicalType>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
