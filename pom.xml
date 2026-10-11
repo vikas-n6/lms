@@ -65,6 +65,7 @@
     <module>platform/lms-concurrency</module>
     <module>platform/lms-config</module>
     <module>platform/lms-events</module>
+    <module>platform/lms-testkit</module>
     <module>contracts</module>
   </modules>
 
