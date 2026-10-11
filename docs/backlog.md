@@ -29,5 +29,7 @@ record results (ADR 0001 for the smoke tests).
 
 - [ ] Resilience4j Spring-Boot-4 starter availability (else core modules + explicit config, new ADR).
 - [ ] Testcontainers 2.x API vs the authored `*IT` bases.
-- [ ] Spring Cloud Gateway coordinates/version for Spring Boot 4.
-- [ ] Kafka-clients 4.3.1 vs the Boot-4-managed version (dependencyConvergence override).
+- [x] Spring Cloud Gateway coordinates/version for Spring Boot 4 — Spring Cloud 2025.1.3, gateway
+      builds green.
+- [x] Kafka-clients 4.3.1 vs the Boot-4-managed version — pinned; convergence passes.
+- [x] Admin UI npm build — verified green; wired under the `ui` Maven profile.

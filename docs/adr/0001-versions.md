@@ -61,13 +61,22 @@ Runnable smoke tests, to record their results back into this ADR:
    Tools that read bytecode (ArchUnit 1.5.1) must parse Java 25 class files — ArchUnit runs as plain
    unit tests and is proven in `lms-testkit`.
 
-## Open risks to settle in the Docker session
+## Resolved during Phase 0
 
-- Resilience4j 2.4.0 may ship only a Spring-Boot-3 starter; if so, wire the core modules with
-  explicit configuration (follow-up ADR).
+- **Spring Cloud Gateway on Boot 4**: Spring Cloud **2025.1.3** (Oakwood) supports Spring Boot 4.1;
+  `spring-cloud-starter-gateway-server-webmvc` builds green on Boot 4.1.1 (gateway module). Pinned.
+- **Kafka-clients 4.3.1**: managed explicitly in the parent; `dependencyConvergence` passes.
+- **Convergence pins** discovered and fixed: `commons-compress` 1.28.0 (Avro vs Confluent),
+  `checker-qual` 3.55.1 (guava vs postgresql).
+- **google-java-format / commons-logging / Avro trusted packages**: ADRs 0002–0004.
+- **Admin UI** `npm run build` verified green (Vite + tsc); wired via the `ui` Maven profile.
+
+## Open risks still to settle in the Docker session
+
+- Resilience4j 2.4.0 Spring-Boot-4 starter availability (not exercised yet; no outbound calls in
+  Phase 0). If only a Boot-3 starter exists, wire core modules explicitly (follow-up ADR).
 - Testcontainers 2.x API differs from 1.x; the `*IT` bases are authored against 2.x, unverified.
-- Spring Cloud Gateway coordinates/version for Boot 4 confirmed at the gateway slice.
-- Kafka-clients 4.3.1 vs the Boot-4-managed version may need an explicit convergence override.
+- The container smoke tests listed above (Kafka, Schema Registry, Temporal) remain to be run.
 
 ## Consequences
 
