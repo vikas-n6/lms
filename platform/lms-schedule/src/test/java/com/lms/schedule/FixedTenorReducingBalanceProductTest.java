@@ -28,6 +28,24 @@ class FixedTenorReducingBalanceProductTest {
     }
 
     @Test
+    void largestSupportedAtMostFloorsToStepWithinRange() {
+        Product p = TestProducts.defaultMicroLoan();
+        // 47,750.00 floors to 47,500.00 (on the 500.00 step).
+        assertThat(p.largestSupportedAtMost(Money.of(4_775_000L, INR)))
+                .contains(Money.of(4_750_000L, INR));
+        // At/above max caps to 50,000.00.
+        assertThat(p.largestSupportedAtMost(Money.of(9_000_000L, INR)))
+                .contains(Money.of(5_000_000L, INR));
+        // Exactly on a step is unchanged.
+        assertThat(p.largestSupportedAtMost(Money.of(550_000L, INR)))
+                .contains(Money.of(550_000L, INR));
+        // Below the minimum: no offerable principal.
+        assertThat(p.largestSupportedAtMost(Money.of(400_000L, INR))).isEmpty();
+        // Wrong currency: empty.
+        assertThat(p.largestSupportedAtMost(Money.of(1_000_000L, USD))).isEmpty();
+    }
+
+    @Test
     void monthlyRateIsAprOverTwelve() {
         Product p = TestProducts.defaultMicroLoan();
         assertThat(p.monthlyInterestRate().percentage().doubleValue()).isEqualTo(2.0);

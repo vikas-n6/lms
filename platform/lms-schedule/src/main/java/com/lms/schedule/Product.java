@@ -4,6 +4,7 @@ import com.lms.money.Money;
 import com.lms.money.Rate;
 import java.util.Currency;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A lending product's versioned parameters (docs/domain-rules.md "The one product"). Every value is
@@ -56,5 +57,21 @@ public interface Product {
         }
         long step = principalStep().minorUnits();
         return step > 0 && (principal.minorUnits() - minPrincipal().minorUnits()) % step == 0;
+    }
+
+    /**
+     * The largest supported principal not exceeding {@code amount}: {@code amount} capped at the
+     * maximum, then floored to the nearest step at or above the minimum. Empty when {@code amount}
+     * is below the minimum or in a different currency. Origination uses this to turn a decision's
+     * approved limit (which need not sit on a step) into an offerable principal.
+     */
+    default Optional<Money> largestSupportedAtMost(Money amount) {
+        if (!amount.currency().equals(currency()) || amount.compareTo(minPrincipal()) < 0) {
+            return Optional.empty();
+        }
+        Money capped = amount.min(maxPrincipal());
+        long step = principalStep().minorUnits();
+        long steps = (capped.minorUnits() - minPrincipal().minorUnits()) / step; // floor, >= 0
+        return Optional.of(minPrincipal().add(principalStep().times(steps)));
     }
 }

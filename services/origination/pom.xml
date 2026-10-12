@@ -26,6 +26,14 @@
     </dependency>
     <dependency>
       <groupId>com.lms</groupId>
+      <artifactId>lms-money</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-schedule</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
       <artifactId>lms-events</artifactId>
     </dependency>
     <dependency>
