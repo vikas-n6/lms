@@ -1,8 +1,8 @@
-# Build output
+# Build output (anchored to the repo root so hexagonal `adapters/out/` packages are NOT ignored)
 target/
-build/
-dist/
-out/
+/build/
+/dist/
+/out/
 
 # Maven wrapper distribution cache (keep the scripts and properties)
 .mvn/wrapper/*.jar
