@@ -1,0 +1,22 @@
+{
+  "version": "v1",
+  "currency": "INR",
+  "rules": [
+    { "type": "AGE", "minAge": 21, "maxAge": 60 },
+    { "type": "KYC" },
+    { "type": "BUREAU_SCORE", "minApprove": 650, "minRefer": 630 },
+    { "type": "BUREAU_DELINQUENCY" },
+    { "type": "INCOME", "minMonthlyIncomeMinor": 1500000 },
+    { "type": "AFFORDABILITY", "maxFoirPercent": 50 },
+    { "type": "ACTIVE_LOANS", "maxActiveLoans": 1 },
+    { "type": "VELOCITY", "maxPerWindow": 3 }
+  ],
+  "limitPolicy": {
+    "incomeMultiple": 3,
+    "bands": [
+      { "minScore": 650, "maxScore": 699, "maxAmountMinor": 1500000 },
+      { "minScore": 700, "maxScore": 749, "maxAmountMinor": 3000000 },
+      { "minScore": 750, "maxScore": 900, "maxAmountMinor": 5000000 }
+    ]
+  }
+}
