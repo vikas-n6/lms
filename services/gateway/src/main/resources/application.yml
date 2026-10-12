@@ -24,6 +24,24 @@ spring:
                 - Path=/api/customers/**
               filters:
                 - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: origination
+              uri: ${ORIGINATION_URI:http://localhost:8102}
+              predicates:
+                - Path=/api/applications/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: decision
+              uri: ${DECISION_URI:http://localhost:8103}
+              predicates:
+                - Path=/api/decisions/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: simulators
+              uri: ${SIM_URI:http://localhost:8190}
+              predicates:
+                - Path=/api/sim/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -34,6 +52,9 @@ lms:
       redis: ${RATELIMIT_REDIS:false}
     services:
       customer: ${CUSTOMER_URI:http://localhost:8101}
+      origination: ${ORIGINATION_URI:http://localhost:8102}
+      decision: ${DECISION_URI:http://localhost:8103}
+      simulators: ${SIM_URI:http://localhost:8190}
 
 management:
   endpoint:

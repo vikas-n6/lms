@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -62,8 +63,18 @@ public class GatewaySecurityConfig {
                                                 "/actuator/info",
                                                 "/api/status")
                                         .permitAll()
+                                        // Simulator control is admin-only (phase prompt S6).
+                                        .requestMatchers("/api/sim/**")
+                                        .hasRole("ADMIN")
+                                        // Reads: admin + analyst + the customer (own records).
+                                        .requestMatchers(HttpMethod.GET, "/api/**")
+                                        .hasAnyRole("ADMIN", "ANALYST", "CUSTOMER")
+                                        // Writes: admin and the acting customer; analyst is
+                                        // read-only.
+                                        // Per-record ownership is enforced in the services
+                                        // (backlog).
                                         .requestMatchers("/api/**")
-                                        .hasAnyRole("ADMIN", "ANALYST")
+                                        .hasAnyRole("ADMIN", "CUSTOMER")
                                         .anyRequest()
                                         .authenticated())
                 .oauth2ResourceServer(
