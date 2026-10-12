@@ -56,6 +56,7 @@ class ApplicationEventsSerdeTest {
                         .setExistingMonthlyEmi(inr(0L))
                         .setActiveLoanCount(0)
                         .setPhoneBlindIndex("hmac-abc123")
+                        .setBureauSubjectPhone("9000000001")
                         .setDataProcessingConsent(true)
                         .setCreditPullConsent(true)
                         .setLoanAgreementConsent(true)

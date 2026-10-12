@@ -24,6 +24,15 @@ lms:
   kafka:
     schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  sim:
+    base-url: ${SIM_BASE_URL:http://localhost:8190}
+  decision:
+    current-rule-set: ${DECISION_RULE_SET:v1}
+    assessment:
+      apr-percent: ${DECISION_ASSESSMENT_APR:24}
+      tenor-months: ${DECISION_ASSESSMENT_TENOR:12}
+    velocity:
+      window-hours: ${DECISION_VELOCITY_WINDOW_HOURS:24}
 
 management:
   endpoint:

@@ -24,6 +24,7 @@
           { "name": "existingMonthlyEmi", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Sum of existing EMIs with us (0 in Phase 1)" },
           { "name": "activeLoanCount", "type": "int", "doc": "Active loans with us at submit" },
           { "name": "phoneBlindIndex", "type": "string", "doc": "Keyed HMAC of the phone; non-PII velocity key" },
+          { "name": "bureauSubjectPhone", "type": "string", "default": "", "doc": "Applicant phone used as the bureau-pull subject (drives simulator personas). Masked in logs; decision does not persist it." },
           { "name": "dataProcessingConsent", "type": "boolean" },
           { "name": "creditPullConsent", "type": "boolean" },
           { "name": "loanAgreementConsent", "type": "boolean" }

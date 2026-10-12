@@ -76,6 +76,27 @@
       <artifactId>spring-boot-starter-jdbc</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.confluent</groupId>
+      <artifactId>kafka-avro-serializer</artifactId>
+    </dependency>
+    <dependency>
+      <!-- Resilience4j core libs (programmatic; the Boot-4 starter is an open risk, ADR 0001). -->
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-retry</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-circuitbreaker</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-timelimiter</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
     </dependency>
@@ -132,6 +153,7 @@
           <release>${maven.compiler.release}</release>
           <compilerArgs>
             <arg>--enable-preview</arg>
+            <arg>-parameters</arg>
             <arg>-Xlint:all,-preview,-processing</arg>
           </compilerArgs>
         </configuration>
@@ -170,6 +192,9 @@
             <exclude>com/lms/decision/DecisionApplication*</exclude>
             <exclude>com/lms/decision/config/*</exclude>
             <exclude>com/lms/decision/adapters/out/persistence/*</exclude>
+            <exclude>com/lms/decision/adapters/out/events/*</exclude>
+            <exclude>com/lms/decision/adapters/out/http/*</exclude>
+            <exclude>com/lms/decision/adapters/in/**</exclude>
           </excludes>
         </configuration>
       </plugin>
