@@ -29,6 +29,18 @@
       <artifactId>lms-events</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-retry</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-circuitbreaker</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.lms</groupId>
       <artifactId>lms-outbox</artifactId>
     </dependency>
@@ -128,6 +140,13 @@
             <exclude>com/lms/customer/CustomerApplication*</exclude>
             <exclude>com/lms/customer/config/*</exclude>
             <exclude>com/lms/customer/adapters/out/persistence/*</exclude>
+            <exclude>com/lms/customer/adapters/out/http/*</exclude>
+            <exclude>com/lms/customer/adapters/out/redis/*</exclude>
+            <exclude>com/lms/customer/adapters/out/sms/*</exclude>
+            <exclude>com/lms/customer/adapters/in/web/Kyc*</exclude>
+            <exclude>com/lms/customer/adapters/in/web/Bank*</exclude>
+            <exclude>com/lms/customer/adapters/in/web/Otp*</exclude>
+            <exclude>com/lms/customer/adapters/in/web/Consent*</exclude>
           </excludes>
         </configuration>
       </plugin>

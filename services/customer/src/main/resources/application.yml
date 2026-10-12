@@ -14,6 +14,10 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/lms}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 server:
   port: ${SERVER_PORT:8101}
@@ -24,6 +28,11 @@ lms:
   kafka:
     schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  sim:
+    base-url: ${SIM_BASE_URL:http://localhost:8190}
+  customer:
+    otp-ttl-minutes: ${OTP_TTL_MINUTES:5}
+    kyc-callback-url: ${KYC_CALLBACK_URL:http://localhost:8101/customers/kyc/callback}
 
 management:
   endpoint:
