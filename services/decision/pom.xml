@@ -33,6 +33,12 @@
       <artifactId>lms-schedule</artifactId>
     </dependency>
     <dependency>
+      <!-- Parallel bureau/bank fan-out via Fanout.callAll. lms-concurrency is preview-compiled,
+           so the test JVM enables preview features (see argLine below and ADR 0006). -->
+      <groupId>com.lms</groupId>
+      <artifactId>lms-concurrency</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.lms</groupId>
       <artifactId>lms-events</artifactId>
     </dependency>
@@ -116,11 +122,39 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
 
-      <!-- Avro 1.12 trusted packages for serde in unit tests (ADR 0004). -->
+      <!-- javac must load the preview-marked Fanout.class, so this module enables preview at
+           compile time too (ADR 0006); its own classes are then preview-flagged, matching the
+           runtime/test preview flag. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <compilerArgs>
+            <arg>--enable-preview</arg>
+            <arg>-Xlint:all,-preview,-processing</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <!-- Avro 1.12 trusted packages for serde in unit tests (ADR 0004). The runtime preview flag
+           is required because this service loads the preview-compiled lms-concurrency Fanout
+           (ADR 0006); @{argLine} preserves the JaCoCo agent. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <argLine>@{argLine} --enable-preview</argLine>
+          <systemPropertyVariables>
+            <org.apache.avro.SERIALIZABLE_PACKAGES>com.lms.contracts</org.apache.avro.SERIALIZABLE_PACKAGES>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <argLine>@{argLine} --enable-preview</argLine>
           <systemPropertyVariables>
             <org.apache.avro.SERIALIZABLE_PACKAGES>com.lms.contracts</org.apache.avro.SERIALIZABLE_PACKAGES>
           </systemPropertyVariables>
