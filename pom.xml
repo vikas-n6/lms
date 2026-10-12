@@ -76,8 +76,9 @@
     <module>services/customer</module>
     <module>services/gateway</module>
     <module>services/origination</module>
-  <module>services/decision</module>
-</modules>
+    <module>services/decision</module>
+    <module>simulators</module>
+  </modules>
 
   <dependencyManagement>
     <dependencies>
@@ -399,9 +400,7 @@
       <id>ui</id>
       <modules>
         <module>admin-ui</module>
-        <module>services/origination</module>
-  <module>services/decision</module>
-</modules>
+      </modules>
     </profile>
   </profiles>
 </project>

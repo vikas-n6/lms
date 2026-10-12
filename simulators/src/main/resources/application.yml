@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: simulators
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: ${SERVER_PORT:8190}
+
+lms:
+  currency:
+    default: ${LMS_CURRENCY_DEFAULT:INR}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
