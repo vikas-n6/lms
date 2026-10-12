@@ -5,6 +5,7 @@ import com.lms.concurrency.FanoutException;
 import com.lms.concurrency.FanoutTimeoutException;
 import com.lms.decision.application.port.out.BankClient;
 import com.lms.decision.application.port.out.BureauClient;
+import com.lms.decision.application.port.out.MarketDataProvider;
 import com.lms.money.Money;
 import java.time.Duration;
 import java.util.List;
@@ -20,7 +21,7 @@ import java.util.concurrent.Callable;
  * does not abort the other — the decision still completes. If the whole fan-out times out or is
  * interrupted, the bureau is treated as unavailable so an application never hangs (domain-rules).
  */
-public final class BureauBankFanout {
+public final class BureauBankFanout implements MarketDataProvider {
 
     private final BureauClient bureauClient;
     private final BankClient bankClient;
@@ -36,6 +37,7 @@ public final class BureauBankFanout {
         this.timeout = timeout;
     }
 
+    @Override
     public MarketData fetch(String subjectId, String phone) {
         Callable<Probe> bureauTask =
                 () -> {

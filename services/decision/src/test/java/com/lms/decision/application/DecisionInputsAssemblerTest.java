@@ -22,6 +22,7 @@ class DecisionInputsAssemblerTest {
                 "cust-1",
                 "cust-1",
                 "9000000001",
+                "blind-abc",
                 requested,
                 34,
                 true,

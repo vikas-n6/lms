@@ -12,6 +12,7 @@ import java.util.Objects;
  * @param customerId the applicant
  * @param subjectId stable id used for the bureau/bank pulls
  * @param phone persona-bearing phone for the bureau pull (not persisted by decision)
+ * @param phoneBlindIndex keyed hash of the phone; the velocity-window key (non-PII)
  * @param requestedAmount requested principal
  * @param ageYears age in whole years at submit
  * @param kycVerified KYC status was VERIFIED
@@ -24,6 +25,7 @@ public record ApplicationForDecision(
         String customerId,
         String subjectId,
         String phone,
+        String phoneBlindIndex,
         Money requestedAmount,
         int ageYears,
         boolean kycVerified,
