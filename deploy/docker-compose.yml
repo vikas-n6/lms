@@ -205,6 +205,10 @@ services:
         condition: service_healthy
       schema-registry:
         condition: service_healthy
+      redis:
+        condition: service_started
+      simulators:
+        condition: service_healthy
     environment:
       SERVER_PORT: 8101
       DB_URL: jdbc:postgresql://postgres:5432/customer
@@ -213,6 +217,9 @@ services:
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
       KAFKA_BOOTSTRAP: kafka:19092
       OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SIM_BASE_URL: http://simulators:8190
       JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
     ports: ["8101:8101"]
     healthcheck:
@@ -221,17 +228,111 @@ services:
       timeout: 5s
       retries: 20
 
+  simulators:
+    image: lms/simulators:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    environment:
+      SERVER_PORT: 8190
+    ports: ["8190:8190"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8190/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  origination:
+    image: lms/origination:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      schema-registry: { condition: service_healthy }
+      simulators: { condition: service_healthy }
+    environment:
+      SERVER_PORT: 8102
+      DB_URL: jdbc:postgresql://postgres:5432/origination
+      DB_USER: origination
+      DB_PASSWORD: ${ORIGINATION_DB_PASSWORD:-origination}
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      SIM_BASE_URL: http://simulators:8190
+      JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8102:8102"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8102/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  decision:
+    image: lms/decision:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      schema-registry: { condition: service_healthy }
+      simulators: { condition: service_healthy }
+    environment:
+      SERVER_PORT: 8103
+      DB_URL: jdbc:postgresql://postgres:5432/decision
+      DB_USER: decision
+      DB_PASSWORD: ${DECISION_DB_PASSWORD:-decision}
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      SIM_BASE_URL: http://simulators:8190
+      # --enable-preview required: decision loads the preview-compiled Fanout (ADR 0006).
+      JAVA_TOOL_OPTIONS: "--enable-preview -Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8103:8103"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8103/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  notification:
+    image: lms/notification:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      schema-registry: { condition: service_healthy }
+      simulators: { condition: service_healthy }
+    environment:
+      SERVER_PORT: 8109
+      DB_URL: jdbc:postgresql://postgres:5432/notification
+      DB_USER: notification
+      DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-notification}
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      SIM_BASE_URL: http://simulators:8190
+      JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8109:8109"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8109/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
   gateway:
     image: lms/gateway:0.1.0-SNAPSHOT
     profiles: [apps, full]
     <<: *restart
-    depends_on: [customer, redis]
+    depends_on: [customer, origination, decision, simulators, redis]
     environment:
       SERVER_PORT: 8080
       REDIS_HOST: redis
       REDIS_PORT: 6379
       OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
       CUSTOMER_URI: http://customer:8101
+      ORIGINATION_URI: http://origination:8102
+      DECISION_URI: http://decision:8103
+      SIM_URI: http://simulators:8190
     ports: ["8080:8080"]
 
   # ------------------------------------------------------------- ui
