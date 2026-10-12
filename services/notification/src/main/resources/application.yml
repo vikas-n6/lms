@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: notification
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/notification}
+    username: ${DB_USER:notification}
+    password: ${DB_PASSWORD:notification}
+  flyway:
+    enabled: true
+    # Only the shared inbox migration is needed for the Phase 1 stub.
+    locations: classpath:db/migration/outbox
+
+server:
+  port: ${SERVER_PORT:8109}
+
+lms:
+  kafka:
+    schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  sim:
+    base-url: ${SIM_BASE_URL:http://localhost:8190}
+  notification:
+    ops-recipient: ${NOTIFICATION_OPS_RECIPIENT:ops}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
