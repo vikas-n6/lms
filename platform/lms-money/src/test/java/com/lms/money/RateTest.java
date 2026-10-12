@@ -33,4 +33,9 @@ class RateTest {
     void stringAndLongFactoriesAgree() {
         assertThat(Rate.percent("24")).isEqualTo(Rate.percent(24));
     }
+
+    @Test
+    void asPlainStringRendersThePercentage() {
+        assertThat(Rate.percent("28.1234").asPlainString()).isEqualTo("28.1234");
+    }
 }

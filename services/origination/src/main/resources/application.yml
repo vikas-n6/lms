@@ -24,6 +24,15 @@ lms:
   kafka:
     schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  sim:
+    base-url: ${SIM_BASE_URL:http://localhost:8190}
+  business:
+    zone: ${LMS_BUSINESS_ZONE:Asia/Kolkata}
+  security:
+    blind-index-key: ${LMS_BLIND_INDEX_KEY:origination-dev-blind-index-key!!}
+  origination:
+    offer-ttl-hours: ${OFFER_TTL_HOURS:48}
+    expiry-scan-ms: ${OFFER_EXPIRY_SCAN_MS:60000}
 
 management:
   endpoint:

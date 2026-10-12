@@ -31,6 +31,11 @@ public record Rate(BigDecimal percentage) {
         return new Rate(BigDecimal.ZERO);
     }
 
+    /** The percentage as a plain decimal string (e.g. {@code "28.1234"}); keeps BigDecimal here. */
+    public String asPlainString() {
+        return percentage.toPlainString();
+    }
+
     /**
      * Divide the rate (e.g. an APR) by a whole divisor, using DECIMAL128 for non-terminating
      * results.

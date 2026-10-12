@@ -19,6 +19,7 @@ public record ApplicantProfile(
         Money declaredMonthlyIncome,
         String employmentType,
         String phoneBlindIndex,
+        String phone,
         Money existingMonthlyEmi,
         int activeLoanCount) {
 
@@ -27,6 +28,7 @@ public record ApplicantProfile(
         Objects.requireNonNull(declaredMonthlyIncome, "declaredMonthlyIncome");
         Objects.requireNonNull(employmentType, "employmentType");
         Objects.requireNonNull(phoneBlindIndex, "phoneBlindIndex");
+        Objects.requireNonNull(phone, "phone");
         Objects.requireNonNull(existingMonthlyEmi, "existingMonthlyEmi");
     }
 }

@@ -29,6 +29,7 @@ class ApplicantSnapshotFactoryTest {
                 Money.of(5_000_000L, INR),
                 "SALARIED",
                 "hmac-abc",
+                "9000000001",
                 Money.zero(INR),
                 0);
     }

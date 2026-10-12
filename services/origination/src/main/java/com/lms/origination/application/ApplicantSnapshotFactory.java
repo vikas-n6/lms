@@ -31,6 +31,7 @@ public final class ApplicantSnapshotFactory {
                 profile.phoneBlindIndex(),
                 profile.dataProcessingConsent(),
                 profile.creditPullConsent(),
-                profile.loanAgreementConsent());
+                profile.loanAgreementConsent(),
+                profile.phone());
     }
 }

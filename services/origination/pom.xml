@@ -37,6 +37,14 @@
       <artifactId>lms-events</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.confluent</groupId>
+      <artifactId>kafka-avro-serializer</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.lms</groupId>
       <artifactId>lms-outbox</artifactId>
     </dependency>
@@ -116,6 +124,19 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
 
+      <!-- -parameters so Jackson can round-trip domain records stored as JSONB (offer/terms). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <compilerArgs>
+            <arg>-parameters</arg>
+            <arg>-Xlint:all,-preview,-processing</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
       <!-- Avro 1.12 trusted packages for serde in unit tests (ADR 0004). -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -136,6 +157,10 @@
             <exclude>com/lms/origination/OriginationApplication*</exclude>
             <exclude>com/lms/origination/config/*</exclude>
             <exclude>com/lms/origination/adapters/out/persistence/*</exclude>
+            <exclude>com/lms/origination/adapters/out/events/*</exclude>
+            <exclude>com/lms/origination/adapters/out/otp/*</exclude>
+            <exclude>com/lms/origination/adapters/out/product/*</exclude>
+            <exclude>com/lms/origination/adapters/in/**</exclude>
           </excludes>
         </configuration>
       </plugin>

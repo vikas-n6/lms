@@ -19,4 +19,5 @@ public record ApplicantSnapshotData(
         String phoneBlindIndex,
         boolean dataProcessingConsent,
         boolean creditPullConsent,
-        boolean loanAgreementConsent) {}
+        boolean loanAgreementConsent,
+        String bureauSubjectPhone) {}
