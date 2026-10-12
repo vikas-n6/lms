@@ -104,6 +104,39 @@ Status key: [ ] todo · [~] in progress · [x] done · (D) needs the Docker sess
 - Heavy infra (Kafka/Redis/Postgres/Temporal) stays deferred; do not block the phase on it, but keep
   every slice independently build-green.
 
+## Progress log (updated 2026-10-12)
+
+All work below is committed and passes `./mvnw clean verify` on JDK 25 (unit + jqwik + ArchUnit +
+Spotless + enforcer + coverage). No Docker on this machine, so every container/runtime piece is
+authored-or-ported-as-port and executed in the final Docker session (memory + ADR 0001).
+
+**Built and verified (pure domain / application / platform):**
+- `lms-schedule`: product, reducing-balance engine, offer quotes, foreclosure; EMI/IRR/simple-
+  interest in `lms-money`; jqwik properties. ADR 0005. `Money.times/min/max`,
+  `Product.largestSupportedAtMost`.
+- contracts: all Phase 1 Avro events + `MoneyAmount`; serde round-trips.
+- `lms-security`: `FieldCipher` (AES-GCM) + `BlindIndex` (HMAC).
+- origination: `ApplicationStateMachine` (sealed, exhaustive); `OfferPricing`; `CompliancePolicy`
+  port + permissive impl; `SubmissionGuards`; `ApplicantSnapshotFactory` (ageYears via IST Clock).
+- decision: `Rule` DSL + `DecisionEvaluator` + `LimitPolicy`; rule-set JSON loader + classpath repo
+  + `rule-sets/v1.json`; `BureauBankFanout` (Fanout, ADR 0006); `DecisionInputsAssembler`.
+- customer: `OtpService` + ports + `SecureRandomOtpGenerator`.
+- simulators: full service (bureau/kyc/bank/sms + control API), in-memory, deterministic, tested.
+
+**Not yet built / deferred to the Docker session (tracked in docs/backlog.md):**
+- customer: aggregate extension (encrypted id/account columns via FieldCipher/BlindIndex, KYC via
+  Resilience4j to the sim, bank linking/penny-drop, append-only consents), Redis `OtpStore`, the
+  three outbox events, REST, JDBC, Flyway.
+- origination: REST (create/update/submit/get/list/withdraw/accept), JDBC (`applications`,
+  `application_events`, `offers`), decision.completed consumer, 48h expiry scheduled job + events,
+  OTP e-sign accept, outbox publishing.
+- decision: `application.submitted` consumer, HTTP bureau/bank clients (Resilience4j), Redis velocity
+  sliding window (Lua), persistence (`decisions`, `bureau_snapshots`, `rule_sets`) + Redis rule-set
+  cache, REST `/explain` + `/review`, `decision.completed` publishing.
+- gateway routes + role mapping; notification stub; admin UI pages; `scripts/e2e/phase1.sh` + k6;
+  compose service blocks + `JAVA_TOOL_OPTIONS` (incl. `--enable-preview` for decision, ADR 0006) +
+  postgres-init roles; README/runbook.
+
 ## Definition of done for the phase (what can be checked now vs Docker)
 - Now: `./mvnw clean verify` green; property/unit/arch tests for schedule, rules, state machine,
   crypto; Avro serde round-trips; ADRs for deviations.
