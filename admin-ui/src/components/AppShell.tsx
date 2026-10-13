@@ -2,7 +2,14 @@ import { type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 
-const navItems = [{ to: "/", label: "Status" }];
+const navItems = [
+  { to: "/", label: "Status" },
+  { to: "/customers", label: "Customers" },
+  { to: "/applications", label: "Applications" },
+  { to: "/review-queue", label: "Review queue" },
+  { to: "/decisions", label: "Decision explainer" },
+  { to: "/simulators", label: "Simulators" },
+];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { username, logout } = useAuth();
@@ -15,6 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.to === "/"}
               className={({ isActive }) =>
                 `rounded px-3 py-2 text-sm ${isActive ? "bg-neutral-900 text-white" : "hover:bg-neutral-100"}`
               }
