@@ -51,4 +51,25 @@ class LmsConfigAutoConfigurationTest {
         runner.withBean(Clock.class, () -> fixed)
                 .run(context -> assertThat(context.getBean(Clock.class)).isSameAs(fixed));
     }
+
+    @Test
+    void providesABusinessCalendarBackedByTheNoOverrideSourceByDefault() {
+        runner.run(
+                context -> {
+                    assertThat(context).hasSingleBean(BusinessCalendar.class);
+                    assertThat(context).hasSingleBean(BusinessDateSource.class);
+                    assertThat(context.getBean(BusinessDateSource.class).currentOverride())
+                            .isEmpty();
+                });
+    }
+
+    @Test
+    void anApplicationSuppliedBusinessDateSourceWins() {
+        java.time.LocalDate advanced = java.time.LocalDate.of(2027, 3, 1);
+        runner.withBean(BusinessDateSource.class, () -> () -> java.util.Optional.of(advanced))
+                .run(
+                        context ->
+                                assertThat(context.getBean(BusinessCalendar.class).today())
+                                        .isEqualTo(advanced));
+    }
 }

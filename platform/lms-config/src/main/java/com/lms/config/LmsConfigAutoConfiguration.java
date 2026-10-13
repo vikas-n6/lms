@@ -22,4 +22,20 @@ public class LmsConfigAutoConfiguration {
     public Clock clock() {
         return Clock.systemUTC();
     }
+
+    /**
+     * No-override source by default: a service that can read the dev business-date key (Redis)
+     * supplies its own {@link BusinessDateSource} adapter, which this backs off to.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public BusinessDateSource businessDateSource() {
+        return BusinessDateSource.none();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public BusinessCalendar businessCalendar(BusinessDateSource source, Clock clock) {
+        return new ConfigurableBusinessCalendar(source, clock);
+    }
 }
