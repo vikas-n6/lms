@@ -49,6 +49,34 @@ docker compose -f deploy/docker-compose.yml exec kafka \
   --topic customer.events --from-beginning --timeout-ms 5000
 ```
 
+## Phase 1: origination + decisioning (Docker session)
+
+Services added: `simulators` (8190), `origination` (8102), `decision` (8103), `notification` (8109),
+plus the extended `customer` (8101) and the gateway routes `/api/applications`, `/api/decisions`,
+`/api/sim` (admin-only).
+
+```bash
+# Start everything (core + auth + apps); build images first (jib) as per Phase 0.
+docker compose -f deploy/docker-compose.yml --profile core --profile auth --profile apps up -d
+
+# End-to-end personas + failure scenarios through the gateway and simulators:
+scripts/e2e/phase1.sh
+
+# Decision latency (informational, needs an admin token):
+TOKEN=$(curl -s -X POST http://localhost:8180/realms/lms/protocol/openid-connect/token \
+  -d grant_type=password -d client_id=gateway -d client_secret=gateway-secret \
+  -d username=admin -d password=admin | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+k6 run -e TOKEN=$TOKEN scripts/k6/phase1-decision-latency.js
+
+# Drive the simulators (personas by phone prefix 9000/9001/9002/9003/9004; presets healthy/slow/flaky/down):
+curl -X POST http://localhost:8080/api/sim/config/bureau/preset/down -H "Authorization: Bearer $TOKEN"
+curl http://localhost:8080/api/sim/sms/outbox -H "Authorization: Bearer $TOKEN"   # read OTPs
+```
+
+Notes: the decision container sets `--enable-preview` (it loads `Fanout`, ADR 0006); the dev velocity
+window is in-memory (Redis-Lua is a backlog item); the dev rule set is served from the classpath
+(`rule-sets/v1.json`). See `docs/backlog.md` for the remaining Docker-session items.
+
 ## Common gotchas
 
 - **JDK 25 required.** System Maven may default to another JDK; always set `JAVA_HOME` to 25. The

@@ -55,6 +55,11 @@ make reset            # stop + wipe volumes
 | --- | --- |
 | Gateway | http://localhost:8080 |
 | Customer service | http://localhost:8101 |
+| Origination service | http://localhost:8102 |
+| Decision service | http://localhost:8103 |
+| Notification stub | http://localhost:8109 |
+| Simulators | http://localhost:8190 |
+| Admin UI | http://localhost:3002 (image) / 5173 (dev) |
 | Kafka UI | http://localhost:8089 |
 | Keycloak | http://localhost:8180 (admin/admin) |
 | Temporal UI | http://localhost:8233 |
@@ -68,6 +73,8 @@ Realm users: `admin`/`admin`, `analyst`/`analyst`, `customer1`/`customer1`.
 ```bash
 make e2e              # scripts/e2e/phase0.sh: token -> POST via gateway -> event on Kafka ->
                       # outbox drained -> survives a Kafka restart
+scripts/e2e/phase1.sh # Phase 1: register -> KYC -> bank -> apply -> decision -> offer -> accept,
+                      # plus persona reject/refer-override/delinquent, velocity and bureau-down
 ```
 
 ## Layout

@@ -123,19 +123,24 @@ authored-or-ported-as-port and executed in the final Docker session (memory + AD
 - customer: `OtpService` + ports + `SecureRandomOtpGenerator`.
 - simulators: full service (bureau/kyc/bank/sms + control API), in-memory, deterministic, tested.
 
-**Not yet built / deferred to the Docker session (tracked in docs/backlog.md):**
-- customer: aggregate extension (encrypted id/account columns via FieldCipher/BlindIndex, KYC via
-  Resilience4j to the sim, bank linking/penny-drop, append-only consents), Redis `OtpStore`, the
-  three outbox events, REST, JDBC, Flyway.
-- origination: REST (create/update/submit/get/list/withdraw/accept), JDBC (`applications`,
-  `application_events`, `offers`), decision.completed consumer, 48h expiry scheduled job + events,
-  OTP e-sign accept, outbox publishing.
-- decision: `application.submitted` consumer, HTTP bureau/bank clients (Resilience4j), Redis velocity
-  sliding window (Lua), persistence (`decisions`, `bureau_snapshots`, `rule_sets`) + Redis rule-set
-  cache, REST `/explain` + `/review`, `decision.completed` publishing.
-- gateway routes + role mapping; notification stub; admin UI pages; `scripts/e2e/phase1.sh` + k6;
-  compose service blocks + `JAVA_TOOL_OPTIONS` (incl. `--enable-preview` for decision, ADR 0006) +
-  postgres-init roles; README/runbook.
+**Now also authored (compiles + `./mvnw clean verify` green; runtime verified in the Docker session):**
+- customer: KYC (encrypted id number + blind index, Resilience4j to the sim, async callback), bank
+  linking (penny-drop + encrypted account number), append-only consents, Redis `OtpStore`,
+  SimSmsSender, the two outbox events, REST (kyc/bank/otp/consents), JDBC, Flyway V0101.
+- origination: Application aggregate, REST (create/get/list/submit/withdraw/esign/accept),
+  decision.completed + customer.events listeners, 48h expiry scheduled job, OTP e-sign, outbox for
+  all five application events, JDBC (applications/application_events/customer_projection), Flyway.
+- decision: application.submitted consumer (inbox), HTTP bureau/bank clients (Resilience4j core),
+  in-memory velocity window (Redis-Lua impl still deferred), JDBC (decisions/bureau_snapshots),
+  rule-set JSON repo, REST /explain + /review + /review-queue, decision.completed publishing.
+- gateway routes + role mapping; notification stub; admin UI (applications/detail/wizard/explainer/
+  review-queue/simulators/customer); `scripts/e2e/phase1.sh` + `scripts/k6/phase1-decision-latency.js`;
+  compose blocks (incl. `--enable-preview` for decision, ADR 0006).
+
+**Still genuinely pending (Docker session):** run `scripts/e2e/phase1.sh` + k6 against the stack;
+Redis-Lua velocity window; Schema Registry BACKWARD compatibility check for the new events; all
+Testcontainers ITs; `phase-1-done` tag. Minor: origination PII (phone/DOB) column encryption; a
+read endpoint for customer KYC/bank status (UI notes the gap).
 
 ## Definition of done for the phase (what can be checked now vs Docker)
 - Now: `./mvnw clean verify` green; property/unit/arch tests for schedule, rules, state machine,

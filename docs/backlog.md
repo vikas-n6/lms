@@ -30,33 +30,30 @@ The Phase 1 domain/application/platform cores are built and `./mvnw clean verify
 docs/plans/phase-1.md "Progress log"). These remaining pieces are container-coupled or need a running
 stack, so they are authored/wired and verified in the Docker session.
 
-- [ ] customer: extend the aggregate (encrypted id number + bank account columns via FieldCipher,
-      keyed BlindIndex lookups), KYC submission via Resilience4j to the KYC sim + async callback
-      endpoint, bank linking + penny-drop, append-only consents, Redis `OtpStore`, publish
-      `customer.registered` / `customer.kyc.completed` / `customer.bank-account.linked` via the
-      outbox; REST + JDBC + Flyway `customers`/`kyc_records`/`consents`/`bank_accounts`.
-- [ ] origination: REST (create/update/submit/get/list+filter+page/withdraw/accept-with-OTP-esign),
-      JDBC `applications`/`application_events`/`offers`, consume `decision.completed` → build offer
-      (OfferPricing) or reject, 48h offer expiry scheduled job emitting `application.expired`,
-      outbox publishing of `application.*`, CompliancePolicy calls recorded before offer + accept.
-- [ ] decision: consume `application.submitted` idempotently (inbox), HTTP BureauClient/BankClient to
-      the simulators behind Resilience4j (retry/circuit-breaker/time-limiter), Redis velocity sliding
-      window (Lua), persist decisions + bureau snapshots + inputs + per-rule results, Redis rule-set
-      cache keyed by version + JDBC `rule_sets` seeded from `rule-sets/v1.json`, REST
-      `GET /decisions/{id}/explain` and `POST /decisions/{id}/review` (admin), publish
-      `decision.completed`. Container `JAVA_TOOL_OPTIONS` must include `--enable-preview` (ADR 0006).
-- [ ] gateway: routes for customers/applications/decisions/simulator-control (admin only); role
-      mapping admin=all, analyst=read, customer=own records.
-- [ ] notification stub: consume `application.*` + `customer.*`, log via the SMS sim.
-- [ ] admin UI: Customers, Applications (+event timeline), Decision explainer, Manual review queue,
-      New-application wizard, Simulator control panel (+live SMS outbox).
-- [ ] `scripts/e2e/phase1.sh`: personas 9000 (approve+accept), 9002 (reject BUREAU_SCORE_LOW), 9003
-      (refer→admin override→offer), 9004 (reject BUREAU_DELINQUENT); 4-apps/24h velocity breach;
-      bureau 100% failure → REFER/BUREAU_UNAVAILABLE within 10s; duplicate `application.submitted` →
-      one decision; replay of a stored decision; offer figures match the engine.
-- [ ] k6 decision-latency script (p95 < 3s at 20 concurrent, informational).
-- [ ] compose service blocks (customer/origination/decision/simulators/notification) + postgres-init
-      roles/DBs; Schema Registry BACKWARD compatibility check for the new events; README + runbook.
+All the service wiring, gateway, notification stub, admin UI, e2e + k6 scripts and compose blocks
+below are now **authored and `./mvnw clean verify`-green**; what remains is to **run** them against a
+real stack and settle the container-only items.
+
+- [x] customer: KYC (encrypted id number + blind index, Resilience4j, async callback), bank linking
+      (penny-drop + encrypted account number), append-only consents, Redis `OtpStore`, SimSmsSender,
+      the two outbox events, REST + JDBC + Flyway V0101 — authored.
+- [x] origination: Application aggregate, REST (create/get/list/submit/withdraw/esign/accept), JDBC
+      (applications/application_events/customer_projection), decision.completed + customer.events
+      listeners, 48h expiry job, outbox for all `application.*`, compliance recorded — authored.
+- [x] decision: application.submitted consumer (inbox), HTTP bureau/bank clients (Resilience4j core),
+      JDBC (decisions/bureau_snapshots), rule-set JSON repo, REST `/explain` + `/review` +
+      `/review-queue`, decision.completed publishing, `--enable-preview` in the image (ADR 0006) —
+      authored.
+- [x] gateway routes + role mapping; notification stub; admin UI (all pages); `scripts/e2e/phase1.sh`;
+      `scripts/k6/phase1-decision-latency.js`; compose service blocks — authored.
+- [ ] RUN in the Docker session: `scripts/e2e/phase1.sh` (all persona + failure scenarios) and the k6
+      latency script; duplicate-event exactly-once and replay at the Kafka level.
+- [ ] decision: swap the in-memory velocity window for the Redis sliding-window Lua script; add the
+      Redis-cached JDBC `rule_sets` repository (classpath repo serves dev now).
+- [ ] Schema Registry BACKWARD compatibility check for the new Avro events (`scripts/check-schema-compat.sh`).
+- [ ] origination: encrypt phone/DOB at rest (currently plaintext columns; id number + account number
+      are already encrypted in customer); add a read endpoint for customer KYC/bank status (UI notes it).
+- [ ] README + runbook: document starting/testing the Phase 1 stack.
 - [ ] Tag `phase-1-done` once the above pass (mirrors the Phase 0 discipline).
 
 ## Deferred: Money / serde round-trip property
