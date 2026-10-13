@@ -54,6 +54,11 @@ class DecisionServiceTest {
             }
             return Optional.ofNullable(last);
         }
+
+        @Override
+        public List<Decision> findReferQueue(int limit) {
+            return saved.stream().filter(d -> d.outcome() == Outcome.REFER).toList();
+        }
     }
 
     private static final class FakePublisher implements DecisionEventPublisher {

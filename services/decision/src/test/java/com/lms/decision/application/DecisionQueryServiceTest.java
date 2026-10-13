@@ -68,6 +68,11 @@ class DecisionQueryServiceTest {
                     public Optional<Decision> findLatestByApplication(String applicationId) {
                         return Optional.empty();
                     }
+
+                    @Override
+                    public java.util.List<Decision> findReferQueue(int limit) {
+                        return java.util.List.of();
+                    }
                 };
         DecisionQueryService service = new DecisionQueryService(repo);
 

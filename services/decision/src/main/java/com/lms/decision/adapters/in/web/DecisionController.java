@@ -37,6 +37,13 @@ public class DecisionController {
         return ExplainResponse.from(query.byId(id));
     }
 
+    /** Manual-review queue: outstanding REFER decisions (admin/analyst). */
+    @GetMapping("/review-queue")
+    public java.util.List<ExplainResponse> reviewQueue(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "50") int limit) {
+        return query.reviewQueue(limit).stream().map(ExplainResponse::from).toList();
+    }
+
     @PostMapping("/{id}/review")
     public ExplainResponse review(@PathVariable String id, @RequestBody ReviewRequest request) {
         Decision prior = query.byId(id);

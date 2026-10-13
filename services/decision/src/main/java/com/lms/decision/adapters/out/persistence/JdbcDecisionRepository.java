@@ -102,6 +102,18 @@ public class JdbcDecisionRepository implements DecisionRepository {
                 .optional();
     }
 
+    @Override
+    public List<Decision> findReferQueue(int limit) {
+        return jdbc.sql(
+                        decisionSelect()
+                                + " where d.outcome = 'REFER' and d.decided_at = (select"
+                                + " max(d2.decided_at) from decisions d2 where d2.application_id ="
+                                + " d.application_id) order by d.decided_at desc limit :limit")
+                .param("limit", limit)
+                .query(this::mapRow)
+                .list();
+    }
+
     private static String decisionSelect() {
         return """
             select d.id, d.application_id, d.customer_id, d.requested_minor, d.currency, d.outcome,

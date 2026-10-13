@@ -20,4 +20,9 @@ public class DecisionQueryService {
                 .findById(DecisionId.of(id))
                 .orElseThrow(() -> new DecisionNotFoundException(id));
     }
+
+    /** The manual-review queue of outstanding REFER decisions (phase prompt S5). */
+    public java.util.List<Decision> reviewQueue(int limit) {
+        return repository.findReferQueue(limit);
+    }
 }

@@ -16,4 +16,10 @@ public interface DecisionRepository {
 
     /** The most recent decision for an application (used to anchor a manual review override). */
     Optional<Decision> findLatestByApplication(String applicationId);
+
+    /**
+     * The manual-review queue: the latest REFER decision per application that has not since been
+     * overridden, newest first (phase prompt S5).
+     */
+    java.util.List<Decision> findReferQueue(int limit);
 }
