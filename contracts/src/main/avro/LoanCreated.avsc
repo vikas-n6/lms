@@ -1,0 +1,26 @@
+{
+  "type": "record",
+  "name": "LoanCreated",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events when an accepted application becomes a loan in PendingDisbursal with a provisional schedule (docs/domain-rules.md 'Loan state machine'). Carries the pinned product version and accepted terms. Ledger and disbursement consume it.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string", "doc": "Human-facing number, e.g. LN-2026-000001" },
+    { "name": "applicationId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+    { "name": "productId", "type": "string" },
+    { "name": "productVersion", "type": "int", "doc": "Product parameter version pinned at creation" },
+    { "name": "principal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "tenorMonths", "type": "int" },
+    { "name": "emi", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "fee", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "gst", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "netDisbursal", "type": "com.lms.contracts.events.MoneyAmount", "doc": "principal - fee - gst" },
+    { "name": "annualInterestRatePercent", "type": "string", "doc": "Nominal APR the schedule is priced at" },
+    {
+      "name": "createdAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

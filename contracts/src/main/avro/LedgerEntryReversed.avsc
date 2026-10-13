@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "LedgerEntryReversed",
+  "namespace": "com.lms.contracts.ledger",
+  "doc": "Published on ledger.events when an entry is reversed by a new mirrored entry with reversesEntryId (docs/domain-rules.md 'Ledger invariants' rule 1). The original is never mutated; reversing twice is rejected.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "journalEntryId", "type": "string", "doc": "The new reversing entry" },
+    { "name": "reversesEntryId", "type": "string", "doc": "The original entry being reversed" },
+    { "name": "reason", "type": "string" },
+    {
+      "name": "reversedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

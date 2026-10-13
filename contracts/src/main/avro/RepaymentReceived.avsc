@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "RepaymentReceived",
+  "namespace": "com.lms.contracts.repayment",
+  "doc": "Published on repayment.events when a payment is received (Phase 3 produces it). loan-account runs the allocation waterfall; ledger posts debit Bank / credit Customer suspense (docs/domain-rules.md posting templates). Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "repaymentId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "amount", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "railReference", "type": "string" },
+    {
+      "name": "receivedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

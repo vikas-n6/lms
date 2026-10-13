@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "LoanActivated",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events when disbursement.succeeded is applied: the real schedule is generated from the actual disbursement date and the loan moves to Active (docs/domain-rules.md 'Loan state machine').",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    {
+      "name": "disbursementDate",
+      "type": { "type": "int", "logicalType": "date" },
+      "doc": "Actual disbursement date (Asia/Kolkata); the schedule anchor"
+    },
+    {
+      "name": "firstDueDate",
+      "type": { "type": "int", "logicalType": "date" }
+    },
+    {
+      "name": "maturityDate",
+      "type": { "type": "int", "logicalType": "date" }
+    },
+    {
+      "name": "activatedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "LoanCancelled",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events when a PendingDisbursal loan is cancelled after disbursement failure or offer expiry (docs/domain-rules.md 'Loan state machine').",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "e.g. DISBURSEMENT_FAILED, OFFER_EXPIRED" },
+    {
+      "name": "cancelledAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "LoanClosed",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events when a loan's outstanding total reaches zero and it moves to Closed (docs/domain-rules.md 'Loan state machine').",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "e.g. PAID_IN_FULL" },
+    {
+      "name": "closedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "LoanRepaymentAllocated",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events after a repayment is allocated down the waterfall (docs/domain-rules.md 'Repayment allocation waterfall'). Component totals let the ledger split Customer suspense across penal/interest/principal; the per-instalment detail is persisted and served by loan-account.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "repaymentId", "type": "string" },
+    { "name": "totalAllocated", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Sum applied to the loan (payment minus advance held)" },
+    { "name": "penal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "interest", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "principal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "advance", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Excess held in Customer suspense for the next instalment" },
+    {
+      "name": "allocatedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

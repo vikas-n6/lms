@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "DisbursementFailed",
+  "namespace": "com.lms.contracts.disbursement",
+  "doc": "Published on disbursement.events when the payout fails after retries (Phase 3 produces it). loan-account cancels the loan; ledger reverses the in-transit posting (debit Bank / credit Disbursement-in-transit).",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "disbursementId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "netAmount", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "reason", "type": "string" },
+    {
+      "name": "failedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

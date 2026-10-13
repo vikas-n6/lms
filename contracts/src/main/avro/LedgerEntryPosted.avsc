@@ -1,0 +1,21 @@
+{
+  "type": "record",
+  "name": "LedgerEntryPosted",
+  "namespace": "com.lms.contracts.ledger",
+  "doc": "Published on ledger.events when a balanced journal entry is posted (docs/domain-rules.md 'Ledger invariants'). Keyed by journalEntryId. Admin read models consume it; totals let consumers check balance without reading postings.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "journalEntryId", "type": "string" },
+    { "name": "sourceEventId", "type": "string", "doc": "The event that caused this entry; unique, makes posting idempotent" },
+    { "name": "sourceEventType", "type": "string", "doc": "e.g. disbursement.succeeded" },
+    { "name": "loanId", "type": ["null", "string"], "default": null },
+    { "name": "customerId", "type": ["null", "string"], "default": null },
+    { "name": "currency", "type": "string", "doc": "ISO 4217 code; an entry balances per currency" },
+    { "name": "totalDebitMinorUnits", "type": "long" },
+    { "name": "totalCreditMinorUnits", "type": "long" },
+    {
+      "name": "postedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

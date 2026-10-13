@@ -1,0 +1,25 @@
+{
+  "type": "record",
+  "name": "DisbursementSucceeded",
+  "namespace": "com.lms.contracts.disbursement",
+  "doc": "Published on disbursement.events when the payout settles (Phase 3 produces it). loan-account generates the real schedule from disbursementDate and activates; ledger posts debit Principal receivable / credit Disbursement-in-transit, Processing fee income and GST payable (docs/domain-rules.md posting templates). Net = principal - fee - gst, so the entry balances.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "disbursementId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "principal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "fee", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "gst", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "netAmount", "type": "com.lms.contracts.events.MoneyAmount" },
+    {
+      "name": "disbursementDate",
+      "type": { "type": "int", "logicalType": "date" },
+      "doc": "Actual settlement date (Asia/Kolkata); the schedule anchor"
+    },
+    { "name": "railReference", "type": "string" },
+    {
+      "name": "succeededAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

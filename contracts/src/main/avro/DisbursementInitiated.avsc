@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "DisbursementInitiated",
+  "namespace": "com.lms.contracts.disbursement",
+  "doc": "Published on disbursement.events when a payout is initiated (Phase 3 produces it; Phase 2 ledger posts debit Disbursement-in-transit / credit Bank). Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "disbursementId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "netAmount", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Net disbursed = principal - fee - gst" },
+    {
+      "name": "initiatedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}
