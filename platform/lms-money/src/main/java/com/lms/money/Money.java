@@ -184,6 +184,29 @@ public record Money(long minorUnits, Currency currency) implements Comparable<Mo
         return parts;
     }
 
+    /**
+     * Split this amount into {@code parts} equal whole-minor-unit parts, with the <em>last</em>
+     * part taking the rounding remainder so the parts sum back to exactly this amount. Used by
+     * daily interest-income recognition, which spreads an instalment's scheduled interest evenly
+     * across the days of its period and lets the last day take the remainder (docs/domain-rules.md
+     * "Interest and penal accrual"). {@link #allocate(long...)} instead puts the remainder on the
+     * earliest parts; this method is the explicit last-part variant the recognition rule calls for.
+     */
+    public Money[] spreadWithRemainderLast(int parts) {
+        if (parts <= 0) {
+            throw new IllegalArgumentException("parts must be positive");
+        }
+        long base = Math.floorDiv(minorUnits, parts);
+        Money[] result = new Money[parts];
+        long allocated = 0L;
+        for (int i = 0; i < parts - 1; i++) {
+            result[i] = new Money(base, currency);
+            allocated += base;
+        }
+        result[parts - 1] = new Money(minorUnits - allocated, currency);
+        return result;
+    }
+
     @Override
     public int compareTo(Money other) {
         requireSameCurrency(other);
