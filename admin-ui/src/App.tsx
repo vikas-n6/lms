@@ -9,6 +9,9 @@ import { DecisionExplainerPage } from "./pages/DecisionExplainerPage";
 import { ReviewQueuePage } from "./pages/ReviewQueuePage";
 import { SimulatorPage } from "./pages/SimulatorPage";
 import { CustomerPage } from "./pages/CustomerPage";
+import { LoansPage } from "./pages/LoansPage";
+import { LoanDetailPage } from "./pages/LoanDetailPage";
+import { LedgerPage } from "./pages/LedgerPage";
 
 export default function App() {
   return (
@@ -23,6 +26,9 @@ export default function App() {
           <Route path="/decisions" element={<DecisionExplainerPage />} />
           <Route path="/decisions/:id" element={<DecisionExplainerPage />} />
           <Route path="/review-queue" element={<ReviewQueuePage />} />
+          <Route path="/loans" element={<LoansPage />} />
+          <Route path="/loans/:id" element={<LoanDetailPage />} />
+          <Route path="/ledger" element={<LedgerPage />} />
           <Route path="/simulators" element={<SimulatorPage />} />
         </Routes>
       </AppShell>
