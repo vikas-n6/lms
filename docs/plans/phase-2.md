@@ -39,7 +39,7 @@ Status key: [ ] todo · [~] in progress · [x] done · (D) needs the Docker sess
 ## Slices (in order). Each: tests first for money/schedule/state/ledger, fast-loop the touched
 ## modules, then a conventional commit.
 
-### S1 — `BusinessCalendar` in `lms-config` [ ]
+### S1 — `BusinessCalendar` in `lms-config` [x]
 - `BusinessCalendar` interface: `LocalDate today()` (business date, `Asia/Kolkata`).
 - `ClockBusinessCalendar` default impl (from the injected `Clock`, zoned to `Asia/Kolkata`) — pure,
   unit-testable with a fixed clock.
@@ -50,7 +50,7 @@ Status key: [ ] todo · [~] in progress · [x] done · (D) needs the Docker sess
 - A small `BusinessDateJobs` contract (`POST /admin/jobs/{name}/run?date=`) is added per service in
   its own slice; the calendar lives here. **Tests now**; Redis read path verified (D).
 
-### S2 — contracts: new Avro events [ ]
+### S2 — contracts: new Avro events [x]
 - Add `.avsc` (shared envelope + `MoneyAmount`) for: `loan.created`, `loan.activated`,
   `loan.interest-accrued`, `loan.repayment-allocated`, `loan.closed`, `loan.cancelled`,
   `ledger.entry-posted`, `ledger.entry-reversed`. Author `disbursement.initiated/succeeded/failed`
@@ -59,7 +59,7 @@ Status key: [ ] todo · [~] in progress · [x] done · (D) needs the Docker sess
 - Serde round-trip unit tests (MockSchemaRegistry, as in Phase 1). Schema-registry BACKWARD compat
   check = (D) via `scripts/check-schema-compat.sh`.
 
-### S3 — `loan-account` domain (pure, tests first) [ ]
+### S3 — `loan-account` domain (pure, tests first) [x]
 - `LoanState` sealed interface: `Created`, `PendingDisbursal`, `Active`, `Delinquent`, `Closed`,
   `Foreclosed`, `WrittenOff`, `Cancelled`. `LoanTransition` sealed trigger type. Pure
   `(state, trigger) -> Result<LoanState, IllegalTransition>` with exhaustive `switch`, guards exactly
@@ -79,7 +79,7 @@ Status key: [ ] todo · [~] in progress · [x] done · (D) needs the Docker sess
   12-month life equals scheduled interest within 1 minor unit/instalment.**
 - `Balances` derivation (outstanding principal, accrued interest, penal, total due now, next due).
 
-### S4 — `loan-account` service wiring (authored; runtime = D) [ ]
+### S4 — `loan-account` service wiring (authored; runtime = D) [x]
 - Scaffold via `new-service.sh loan-account 8104`, then rewrite for the loan aggregate.
 - Flyway V0100: `products` (seeded with the one product + version), `loans`, `schedule_items`,
   `accruals` (unique `(loan_id, business_date, kind)`), `allocations`, `loan_state_history`

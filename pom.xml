@@ -78,6 +78,7 @@
     <module>services/origination</module>
     <module>services/decision</module>
     <module>services/loan-account</module>
+    <module>services/ledger</module>
     <module>services/notification</module>
     <module>simulators</module>
   </modules>
