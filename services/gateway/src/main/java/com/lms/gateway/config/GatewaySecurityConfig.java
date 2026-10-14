@@ -66,6 +66,13 @@ public class GatewaySecurityConfig {
                                         // Simulator control is admin-only (phase prompt S6).
                                         .requestMatchers("/api/sim/**")
                                         .hasRole("ADMIN")
+                                        // Admin ops (business date, job triggers, dev disbursement/
+                                        // repayment) and ledger reversal are admin-only.
+                                        .requestMatchers("/api/admin/**")
+                                        .hasRole("ADMIN")
+                                        .requestMatchers(
+                                                HttpMethod.POST, "/api/journal-entries/*/reverse")
+                                        .hasRole("ADMIN")
                                         // Reads: admin + analyst + the customer (own records).
                                         .requestMatchers(HttpMethod.GET, "/api/**")
                                         .hasAnyRole("ADMIN", "ANALYST", "CUSTOMER")

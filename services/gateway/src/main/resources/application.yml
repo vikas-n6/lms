@@ -36,6 +36,18 @@ spring:
                 - Path=/api/decisions/**
               filters:
                 - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: loan-account
+              uri: ${LOAN_ACCOUNT_URI:http://localhost:8104}
+              predicates:
+                - Path=/api/loans/**,/api/admin/jobs/**,/api/admin/loans/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: ledger
+              uri: ${LEDGER_URI:http://localhost:8108}
+              predicates:
+                - Path=/api/journal-entries/**,/api/ledger/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
             - id: simulators
               uri: ${SIM_URI:http://localhost:8190}
               predicates:
@@ -54,6 +66,8 @@ lms:
       customer: ${CUSTOMER_URI:http://localhost:8101}
       origination: ${ORIGINATION_URI:http://localhost:8102}
       decision: ${DECISION_URI:http://localhost:8103}
+      loan-account: ${LOAN_ACCOUNT_URI:http://localhost:8104}
+      ledger: ${LEDGER_URI:http://localhost:8108}
       simulators: ${SIM_URI:http://localhost:8190}
 
 management:
