@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: ledger
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ledger}
+    username: ${DB_USER:ledger}
+    password: ${DB_PASSWORD:ledger}
+  flyway:
+    enabled: true
+    # Service migrations start at V0100; the shared outbox/inbox location supplies V0001.
+    locations: classpath:db/migration,classpath:db/migration/outbox
+  jooq:
+    sql-dialect: postgres
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/lms}
+
+server:
+  port: ${SERVER_PORT:8108}
+
+lms:
+  currency:
+    default: ${LMS_CURRENCY_DEFAULT:INR}
+  kafka:
+    schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  jobs:
+    reconciliation-cron: ${RECONCILIATION_CRON:0 0 * * * *}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true

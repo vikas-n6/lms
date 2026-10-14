@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "LedgerReconCompleted",
+  "namespace": "com.lms.contracts.ledger",
+  "doc": "Published on ledger.events when the scheduled integrity job runs (docs/architecture.md topic catalogue). The trial balance must net to zero; a non-zero diffMinorUnits is an alert (balanced=false).",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "reconRunId", "type": "string" },
+    { "name": "currency", "type": "string" },
+    { "name": "diffMinorUnits", "type": "long", "doc": "Total debits minus total credits; 0 when healthy" },
+    { "name": "balanced", "type": "boolean" },
+    {
+      "name": "runAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}
