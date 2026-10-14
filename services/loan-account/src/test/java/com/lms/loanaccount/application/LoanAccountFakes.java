@@ -160,6 +160,21 @@ final class LoanAccountFakes {
                 boolean legal) {
             entries.add(new Entry(loanId, from, to, cause, eventId, legal));
         }
+
+        @Override
+        public List<StateHistoryRepository.Entry> findByLoanId(UUID loanId) {
+            return entries.stream()
+                    .filter(e -> e.loanId().equals(loanId))
+                    .map(
+                            e ->
+                                    new StateHistoryRepository.Entry(
+                                            e.from() == null ? null : e.from().code(),
+                                            e.to().code(),
+                                            e.cause(),
+                                            e.legal(),
+                                            java.time.Instant.EPOCH))
+                    .toList();
+        }
     }
 
     static final class FakeAccrualRepository implements AccrualRepository {

@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: loan-account
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/loan_account}
+    username: ${DB_USER:loan_account}
+    password: ${DB_PASSWORD:loan_account}
+  flyway:
+    enabled: true
+    # Service migrations start at V0100; the shared outbox/inbox location supplies V0001.
+    locations: classpath:db/migration,classpath:db/migration/outbox
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/lms}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: ${SERVER_PORT:8104}
+
+lms:
+  currency:
+    default: ${LMS_CURRENCY_DEFAULT:INR}
+  kafka:
+    schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  product:
+    id: ${PRODUCT_ID:MICRO-V1}
+    version: ${PRODUCT_VERSION:1}
+    min-principal-minor: ${PRODUCT_MIN_PRINCIPAL_MINOR:500000}
+    max-principal-minor: ${PRODUCT_MAX_PRINCIPAL_MINOR:5000000}
+    principal-step-minor: ${PRODUCT_PRINCIPAL_STEP_MINOR:50000}
+    apr-percent: ${PRODUCT_APR_PERCENT:24}
+    fee-percent: ${PRODUCT_FEE_PERCENT:2}
+    gst-percent: ${PRODUCT_GST_PERCENT:18}
+    penal-apr-percent: ${PRODUCT_PENAL_APR_PERCENT:36}
+    grace-days: ${PRODUCT_GRACE_DAYS:3}
+    foreclosure-charge-percent: ${PRODUCT_FORECLOSURE_CHARGE_PERCENT:0}
+    tenors: ${PRODUCT_TENORS:3,6,9,12}
+  jobs:
+    interest-accrual-cron: ${INTEREST_ACCRUAL_CRON:0 30 0 * * *}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true

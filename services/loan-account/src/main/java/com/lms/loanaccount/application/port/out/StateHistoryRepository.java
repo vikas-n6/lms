@@ -1,6 +1,8 @@
 package com.lms.loanaccount.application.port.out;
 
 import com.lms.loanaccount.domain.LoanState;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -19,4 +21,11 @@ public interface StateHistoryRepository {
      */
     void append(
             UUID loanId, LoanState from, LoanState to, String cause, UUID eventId, boolean legal);
+
+    /** The full transition timeline for a loan, oldest first. */
+    List<Entry> findByLoanId(UUID loanId);
+
+    /** One recorded transition (read model for the state-history timeline). */
+    record Entry(
+            String fromState, String toState, String cause, boolean legal, Instant recordedAt) {}
 }
