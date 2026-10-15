@@ -100,7 +100,7 @@ Status key: [ ] todo · [~] in progress · [x] done · (D) needs the Docker sess
   `GET /loans/{id}/foreclosure-quote?date=`.
 - ArchUnit test (hexagonal + no ThreadLocal/BigDecimal). Web-slice + application tests with fakes.
 
-### S5 — `ledger` service [ ]
+### S5 — `ledger` service [x]
 - Scaffold via `new-service.sh ledger 8108`, rewrite for double-entry.
 - Domain (pure, tests first): `Account`, `JournalEntry` (balances per currency — rejects unbalanced
   in the constructor), `Posting`, `PostingTemplate` interface + versioned sealed templates:
@@ -121,17 +121,17 @@ Status key: [ ] todo · [~] in progress · [x] done · (D) needs the Docker sess
   track loan balances. Runs against the in-memory domain (no DB) so it is provable now; the SQL
   constraint/replay/concurrency variants are (D).
 
-### S6 — gateway routes + roles [ ]
+### S6 — gateway routes + roles [x]
 - Routes for `/loans/**` and `/ledger/**` (and `/journal-entries/**`), read for `analyst`, admin for
   reverse/jobs/business-date. Dev-only `PUT /admin/business-date` to set/advance the Redis key.
 
-### S7 — admin UI pages [ ] (build under `-Pui`; OIDC login = D)
+### S7 — admin UI pages [x] (build under `-Pui`; OIDC login = D)
 - Loans list + detail (state badge, balances, state-history timeline). EMI schedule viewer
   (per-item status colours, paid components, overdue highlight). Ledger explorer (entries, postings,
   account balances, trial balance + zero-check badge, loan→entries drill-down). Foreclosure-quote
   dialog. Dev-only business-date widget in the header.
 
-### S8 — e2e + wiring [ ]
+### S8 — e2e + wiring [x]
 - `scripts/e2e/phase2.sh` (create→simulate-disbursement→accrue months→repay→allocate→close; trial
   balance zero; foreclosure quote; replay). compose blocks for loan-account + ledger, postgres-init
   DBs/roles (ledger role without UPDATE/DELETE). runbook + README updates. Running it = (D).

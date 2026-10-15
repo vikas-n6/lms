@@ -70,3 +70,28 @@ real stack and settle the container-only items.
       builds green.
 - [x] Kafka-clients 4.3.1 vs the Boot-4-managed version — pinned; convergence passes.
 - [x] Admin UI npm build — verified green; wired under the `ui` Maven profile.
+
+## Phase 2: loan core + ledger (Docker session / follow-ups)
+
+- [ ] RUN in the Docker session: `scripts/e2e/phase2.sh` against the full stack (loan created from
+      application.accepted, simulate-disbursement, 12-month accrual by business date, full repayment →
+      CLOSED, foreclosure quote, ledger reversal rejected twice, trial balance zero throughout).
+- [ ] loan-account/ledger Testcontainers ITs (deferred): the jqwik stateful ledger invariant at the
+      SQL level; inserting an unbalanced journal entry directly in SQL fails at COMMIT (deferred
+      constraint trigger); replay `loan.events`+`disbursement.events` from offset 0 and compare the
+      trial balance and every account balance; 50 concurrent events for one loan — no lost updates,
+      no duplicate postings; accrual-idempotency at the DB unique key.
+- [ ] Postgres role hardening: in addition to the append-only triggers (enforced in the migrations),
+      withhold UPDATE/DELETE grants on `journal_entries`/`postings`/`allocations`/`loan_state_history`/
+      `accruals` from the service roles (postgres-init, needs a separate migrator/owner role so the
+      service role is INSERT/SELECT only).
+- [ ] Schema Registry BACKWARD compatibility for the Phase 2 events (loan.*, disbursement.*,
+      repayment.received, ledger.*) via `scripts/check-schema-compat.sh`.
+- [ ] Outbox relay + Kafka producer bean are still unwired across all services (Phase 0/1 deferral);
+      wire the relay poller so loan/ledger events actually publish in the Docker session.
+- [ ] Advance held in Customer suspense is recorded on `loan.repayment-allocated` but not yet
+      auto-applied when the next instalment falls due (domain-rules "Repayment allocation" rule 3).
+- [ ] Penal accrual job (`loan.penal-accrued`) and the Delinquent/WrittenOff transitions are modelled
+      (PenalAccrual, DpdBucket, state machine) but the daily penal/DPD job and write-off command are
+      Phase 4 work; wire them there.
+- [ ] Tag `phase-2-done` once the Docker-session items above pass (mirrors the Phase 0/1 discipline).

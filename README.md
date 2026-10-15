@@ -5,17 +5,21 @@ loan accounts, disbursement, repayment, collections, a double-entry ledger, and 
 personal learning project — regulations are mocked and every external party (bureau, KYC, payment
 rail, SMS) is a simulator we own. See `CLAUDE.md`, `docs/architecture.md` and `docs/domain-rules.md`.
 
-## Status — Phase 0 (Foundations)
+## Status — Phase 2 (Loan core + ledger)
 
-Green multi-module Maven build on JDK 25, shared platform libraries, the Avro event contracts, a
-reference service (`customer`) that publishes a reliable event through the transactional outbox, a
-gateway, and the full local-infra definitions.
+Phases 0–1 (foundations, origination, decisioning) plus Phase 2: `loan-account` (8104) turns an
+accepted offer into a loan with a reducing-balance EMI schedule, runs the loan state machine, daily
+interest accrual, the repayment allocation waterfall and foreclosure quotes; `ledger` (8108) is a
+double-entry ledger with versioned posting templates, immutable balanced journal entries, a trial
+balance and admin reversal. A shared `BusinessCalendar` drives all date logic. The money-critical
+core (schedule, allocation, accrual, state machine, ledger invariants) is proven by unit and jqwik
+property tests under `./mvnw clean verify`.
 
-> **Docker note:** the machine used to build Phase 0 has no container runtime, so the
-> container-dependent items (Testcontainers `*IT`, the ADR 0001 broker/Temporal smoke tests,
-> `docker compose up`, the e2e run, Admin UI OIDC login) are **authored but not yet executed**.
-> They are tracked in `docs/backlog.md` and run in a session with Docker. The `phase-0-done` tag is
-> withheld until they pass.
+> **Docker note:** the build machine has no container runtime, so container-dependent items
+> (Testcontainers `*IT`, the SQL constraint/replay/concurrency tests, `docker compose up`, the
+> `scripts/e2e/phase*.sh` runs, the outbox→Kafka relay, Admin UI OIDC login) are **authored but not
+> yet executed**. They are tracked in `docs/backlog.md` and run in a session with Docker. The
+> `phase-2-done` tag is withheld until they pass.
 
 ## Prerequisites
 
@@ -75,6 +79,8 @@ make e2e              # scripts/e2e/phase0.sh: token -> POST via gateway -> even
                       # outbox drained -> survives a Kafka restart
 scripts/e2e/phase1.sh # Phase 1: register -> KYC -> bank -> apply -> decision -> offer -> accept,
                       # plus persona reject/refer-override/delinquent, velocity and bureau-down
+scripts/e2e/phase2.sh # Phase 2: accepted application -> loan -> simulate-disbursement -> accrue over
+                      # the life -> full repayment -> CLOSED; ledger trial balance stays zero
 ```
 
 ## Layout
@@ -82,7 +88,7 @@ scripts/e2e/phase1.sh # Phase 1: register -> KYC -> bank -> apply -> decision ->
 ```
 platform/   lms-money lms-concurrency lms-config lms-events lms-security lms-observability lms-outbox lms-testkit
 contracts/  Avro schemas + OpenAPI (generated jar; services depend on it, never on each other)
-services/   customer gateway  (origination, decision, loan-account, ... added in later phases)
+services/   customer gateway origination decision loan-account ledger notification (disbursement, repayment, collections, reporting in later phases)
 deploy/     docker-compose + profiles, postgres-init, kafka-init, keycloak realm, observability
 scripts/    new-service.sh, check-schema-compat.sh, e2e/
 docs/       architecture, domain-rules, adr/, plans/, runbook, backlog

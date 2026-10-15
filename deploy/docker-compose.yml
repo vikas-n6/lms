@@ -294,6 +294,58 @@ services:
       timeout: 5s
       retries: 20
 
+  loan-account:
+    image: lms/loan-account:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      schema-registry: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    environment:
+      SERVER_PORT: 8104
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres:5432/loan_account
+      DB_USER: loan_account
+      DB_PASSWORD: ${LOAN_ACCOUNT_DB_PASSWORD:-loan_account}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8104:8104"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8104/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  ledger:
+    image: lms/ledger:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      schema-registry: { condition: service_healthy }
+    environment:
+      SERVER_PORT: 8108
+      DB_URL: jdbc:postgresql://postgres:5432/ledger
+      DB_USER: ledger
+      DB_PASSWORD: ${LEDGER_DB_PASSWORD:-ledger}
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8108:8108"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8108/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
   notification:
     image: lms/notification:0.1.0-SNAPSHOT
     profiles: [apps, full]
@@ -323,15 +375,19 @@ services:
     image: lms/gateway:0.1.0-SNAPSHOT
     profiles: [apps, full]
     <<: *restart
-    depends_on: [customer, origination, decision, simulators, redis]
+    depends_on: [customer, origination, decision, loan-account, ledger, simulators, redis]
     environment:
       SERVER_PORT: 8080
+      # dev profile enables the business-date admin endpoint (phase prompt task 1).
+      SPRING_PROFILES_ACTIVE: dev
       REDIS_HOST: redis
       REDIS_PORT: 6379
       OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
       CUSTOMER_URI: http://customer:8101
       ORIGINATION_URI: http://origination:8102
       DECISION_URI: http://decision:8103
+      LOAN_ACCOUNT_URI: http://loan-account:8104
+      LEDGER_URI: http://ledger:8108
       SIM_URI: http://simulators:8190
     ports: ["8080:8080"]
 

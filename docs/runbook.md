@@ -89,3 +89,33 @@ window is in-memory (Redis-Lua is a backlog item); the dev rule set is served fr
 - **No Docker here.** This environment has no container runtime, so ITs/compose/e2e are deferred
   (`docs/backlog.md`). Everything else builds green with `./mvnw clean verify`.
 ```
+
+## Phase 2: loan core + ledger (Docker session)
+
+```bash
+# Start core + auth + apps (build images first via jib, as in Phase 0). loan-account (8104) and
+# ledger (8108) are in the `apps` profile; the gateway and loan-account run with SPRING_PROFILES_ACTIVE=dev
+# so the business-date and simulate/inject endpoints are active.
+docker compose -f deploy/docker-compose.yml --profile core --profile auth --profile apps up -d
+
+# End-to-end (needs an accepted application first — run scripts/e2e/phase1.sh, then):
+scripts/e2e/phase2.sh
+
+# Drive a loan by hand (admin token; see phase1 notes for token()):
+#   simulate a disbursement (dev):      POST /api/admin/loans/{id}/simulate-disbursement
+#   advance the business date (dev):    POST /api/admin/business-date/advance?days=14
+#   run interest accrual for a date:    POST /api/admin/jobs/interest-accrual/run?date=YYYY-MM-DD
+#   inject a repayment (dev):           POST /api/admin/loans/{id}/inject-repayment {"amountMinor":474000}
+#   foreclosure quote:                  GET  /api/loans/{id}/foreclosure-quote?date=YYYY-MM-DD
+#   ledger trial balance (zero check):  GET  /api/ledger/trial-balance
+#   per-loan sub-ledger:                GET  /api/ledger/loans/{loanId}
+#   reverse an entry (admin):           POST /api/journal-entries/{id}/reverse {"reason":"..."}
+```
+
+Debugging the loan/ledger path:
+- A loan not appearing after acceptance → check the loan-account `application.events` consumer and the
+  `inbox_processed` table; the loan is idempotent on `applicationId` (unique).
+- A ledger entry missing → the ledger consumes `loan.events`/`disbursement.events`; posting is
+  idempotent on `source_event_id`. The trial balance metric is `ledger_trial_balance_diff_minor_units`
+  (Prometheus) and must be zero.
+- Business date is the Redis key `lms:platform:business-date`; unset = today in Asia/Kolkata.
