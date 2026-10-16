@@ -1,8 +1,13 @@
 package com.lms.simulators.config;
 
 /**
- * Tunable behaviour of one simulator (phase prompt S2 control API). Rates are probabilities in
+ * Tunable behaviour of one simulator (phase prompt S2/S3 control API). Rates are probabilities in
  * [0,1]; a {@code seed} makes a run reproducible.
+ *
+ * <p>Phase 3 adds three money-movement knobs: {@code unknownOutcomeRate} (the operation succeeds
+ * but the response is lost or times out, so the caller must query status), {@code outOfOrderRate}
+ * (asynchronous callbacks arrive out of order), and {@code returnRate} (a debit that succeeded is
+ * later returned).
  */
 public record SimulatorConfig(
         int latencyMsMin,
@@ -10,6 +15,9 @@ public record SimulatorConfig(
         double failureRate,
         double timeoutRate,
         double duplicateCallbackRate,
+        double unknownOutcomeRate,
+        double outOfOrderRate,
+        double returnRate,
         long callbackDelayMs,
         long seed) {
 
@@ -20,6 +28,9 @@ public record SimulatorConfig(
         requireFraction(failureRate, "failureRate");
         requireFraction(timeoutRate, "timeoutRate");
         requireFraction(duplicateCallbackRate, "duplicateCallbackRate");
+        requireFraction(unknownOutcomeRate, "unknownOutcomeRate");
+        requireFraction(outOfOrderRate, "outOfOrderRate");
+        requireFraction(returnRate, "returnRate");
         if (callbackDelayMs < 0) {
             throw new IllegalArgumentException("callbackDelayMs must be non-negative");
         }
@@ -38,6 +49,9 @@ public record SimulatorConfig(
                 failureRate,
                 timeoutRate,
                 duplicateCallbackRate,
+                unknownOutcomeRate,
+                outOfOrderRate,
+                returnRate,
                 callbackDelayMs,
                 newSeed);
     }

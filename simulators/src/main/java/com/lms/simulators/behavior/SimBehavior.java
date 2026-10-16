@@ -49,10 +49,34 @@ public class SimBehavior {
 
     /** Decide (under the seeded RNG) whether a callback should be duplicated. */
     public boolean shouldDuplicateCallback(String simulator) {
-        SimulatorConfig cfg = registry.get(simulator);
+        return draw(simulator, registry.get(simulator).duplicateCallbackRate());
+    }
+
+    /**
+     * Decide whether this operation's response is lost/times out even though it succeeded server
+     * side (phase prompt S3 {@code unknownOutcomeRate}). The caller then has to query status by its
+     * idempotency key rather than issue a second operation.
+     */
+    public boolean shouldLoseResponse(String simulator) {
+        return draw(simulator, registry.get(simulator).unknownOutcomeRate());
+    }
+
+    /**
+     * Decide whether asynchronous callbacks for this operation should be delivered out of order.
+     */
+    public boolean shouldDeliverOutOfOrder(String simulator) {
+        return draw(simulator, registry.get(simulator).outOfOrderRate());
+    }
+
+    /** Decide whether a succeeded debit is later returned (phase prompt S3 {@code returnRate}). */
+    public boolean shouldReturn(String simulator) {
+        return draw(simulator, registry.get(simulator).returnRate());
+    }
+
+    private boolean draw(String simulator, double probability) {
         Random rnd = registry.random(simulator);
         synchronized (rnd) {
-            return rnd.nextDouble() < cfg.duplicateCallbackRate();
+            return rnd.nextDouble() < probability;
         }
     }
 

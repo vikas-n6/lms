@@ -50,6 +50,14 @@
       <artifactId>lms-testkit</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- Test-only: cross-verify the simulators' SimCallbackSigner against lms-security's
+         CallbackVerifier so the two signing implementations cannot drift. Kept off the runtime
+         classpath so Spring Security does not lock down these open mock endpoints. -->
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-security</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
@@ -74,6 +82,7 @@
             <exclude>com/lms/simulators/SimulatorsApplication*</exclude>
             <exclude>com/lms/simulators/config/SimulatorsConfig*</exclude>
             <exclude>com/lms/simulators/kyc/HttpKycCallbackClient*</exclude>
+            <exclude>com/lms/simulators/callback/HttpSignedCallbackClient*</exclude>
           </excludes>
         </configuration>
       </plugin>

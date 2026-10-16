@@ -12,11 +12,14 @@ public enum SimulatorPreset {
     DOWN;
 
     public SimulatorConfig toConfig(long seed) {
+        // fields: latencyMin, latencyMax, failure, timeout, duplicate, unknownOutcome, outOfOrder,
+        // return, callbackDelayMs, seed
         return switch (this) {
-            case HEALTHY -> new SimulatorConfig(5, 20, 0.0, 0.0, 0.0, 0, seed);
-            case SLOW -> new SimulatorConfig(500, 2000, 0.0, 0.0, 0.0, 200, seed);
-            case FLAKY -> new SimulatorConfig(20, 200, 0.30, 0.10, 0.25, 1000, seed);
-            case DOWN -> new SimulatorConfig(0, 0, 1.0, 0.0, 0.0, 0, seed);
+            case HEALTHY -> new SimulatorConfig(5, 20, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, seed);
+            case SLOW -> new SimulatorConfig(500, 2000, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 200, seed);
+            case FLAKY ->
+                    new SimulatorConfig(20, 200, 0.30, 0.10, 0.25, 0.15, 0.20, 0.10, 1000, seed);
+            case DOWN -> new SimulatorConfig(0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, seed);
         };
     }
 

@@ -55,7 +55,9 @@ class KycSimulatorTest {
     @Test
     void duplicateCallbackRateDeliversTwice() {
         SimConfigRegistry registry = new SimConfigRegistry();
-        registry.put("kyc", new SimulatorConfig(0, 0, 0.0, 0.0, 1.0, 0, 1L)); // always duplicate
+        registry.put(
+                "kyc",
+                new SimulatorConfig(0, 0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0, 1L)); // always duplicate
         RecordingClient client = new RecordingClient();
         KycSimulator kyc =
                 new KycSimulator(new SimBehavior(registry), registry, Runnable::run, client);

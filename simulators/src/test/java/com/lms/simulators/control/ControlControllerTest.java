@@ -23,7 +23,7 @@ class ControlControllerTest {
 
     @Test
     void putReplacesConfig() {
-        SimulatorConfig cfg = new SimulatorConfig(1, 2, 0.0, 0.0, 0.0, 0, 5);
+        SimulatorConfig cfg = new SimulatorConfig(1, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 5);
         assertThat(controller.put("bank", cfg)).isEqualTo(cfg);
         assertThat(controller.get("bank")).isEqualTo(cfg);
     }
