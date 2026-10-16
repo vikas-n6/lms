@@ -81,7 +81,8 @@
     <module>services/ledger</module>
     <module>services/notification</module>
     <module>simulators</module>
-  </modules>
+    <module>services/disbursement</module>
+</modules>
 
   <dependencyManagement>
     <dependencies>
@@ -173,6 +174,19 @@
         <groupId>org.checkerframework</groupId>
         <artifactId>checker-qual</artifactId>
         <version>3.55.1</version>
+      </dependency>
+      <!-- Convergence pins for Temporal's gRPC/protobuf/gson/guava chains (ADR 0008):
+           error_prone_annotations (2.18.0 / 2.41.0 / 2.50.0) and guava (33.4.8/33.6.0,
+           -android vs -jre). Pin the highest, -jre flavour for the server JVM. -->
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>2.50.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>33.6.0-jre</version>
       </dependency>
 
       <!-- Kafka clients pinned to 4.x (KRaft), overriding the Boot-managed version (ADR 0001) -->
@@ -403,7 +417,8 @@
       <id>ui</id>
       <modules>
         <module>admin-ui</module>
-      </modules>
+        <module>services/disbursement</module>
+</modules>
     </profile>
   </profiles>
 </project>
