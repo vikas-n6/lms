@@ -89,3 +89,19 @@ create table if not exists recon_runs (
     diff_minor_units bigint      not null,
     created_at       timestamptz not null default now()
 );
+
+-- Append-only enforcement (docs/domain-rules.md "No UPDATE or DELETE on ledger rows"). Enforced by
+-- triggers so it holds even for the table owner, stronger than withholding grants; the postgres-init
+-- grant revocation is belt-and-suspenders (Docker session).
+create or replace function reject_mutation() returns trigger as $$
+begin
+    raise exception 'table % is append-only: UPDATE/DELETE is not permitted', tg_table_name;
+end;
+$$ language plpgsql;
+
+create or replace trigger trg_journal_entries_append_only
+    before update or delete on journal_entries
+    for each row execute function reject_mutation();
+create or replace trigger trg_postings_append_only
+    before update or delete on postings
+    for each row execute function reject_mutation();

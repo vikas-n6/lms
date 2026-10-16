@@ -115,3 +115,23 @@ create table if not exists loan_state_history (
     created_at timestamptz not null default now()
 );
 create index if not exists idx_state_history_loan on loan_state_history (loan_id, created_at);
+
+-- Append-only enforcement for allocations, accruals and state history (CLAUDE.md global do-not list:
+-- no UPDATE/DELETE on allocation or state-history rows). Triggers enforce it even for the table
+-- owner; the postgres-init grant revocation is belt-and-suspenders (Docker session). loans and
+-- schedule_items remain mutable (state transitions, paid components).
+create or replace function reject_mutation() returns trigger as $$
+begin
+    raise exception 'table % is append-only: UPDATE/DELETE is not permitted', tg_table_name;
+end;
+$$ language plpgsql;
+
+create or replace trigger trg_allocations_append_only
+    before update or delete on allocations
+    for each row execute function reject_mutation();
+create or replace trigger trg_accruals_append_only
+    before update or delete on accruals
+    for each row execute function reject_mutation();
+create or replace trigger trg_state_history_append_only
+    before update or delete on loan_state_history
+    for each row execute function reject_mutation();
