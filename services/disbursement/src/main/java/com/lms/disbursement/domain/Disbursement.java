@@ -11,7 +11,8 @@ import java.util.UUID;
  * mutated in place. Amounts are {@link Money} (minor units + currency), never doubles/BigDecimal
  * (CLAUDE.md money rules). The net amount is supplied by loan-account via {@code loan.created}
  * (principal − fee − GST) and is what the rail pays out and what {@code disbursement.succeeded}
- * reports.
+ * reports. {@code initiatedPublished} makes the {@code disbursement.initiated} publish idempotent
+ * across the workflow's at-least-once activity execution.
  */
 public record Disbursement(
         UUID id,
@@ -26,6 +27,7 @@ public record Disbursement(
         String utr,
         LocalDate disbursementDate,
         int attempts,
+        boolean initiatedPublished,
         String failureReason,
         Instant createdAt,
         Instant updatedAt,
@@ -41,7 +43,7 @@ public record Disbursement(
         }
     }
 
-    /** A fresh disbursement in INITIATED with no attempts yet. */
+    /** A fresh disbursement in INITIATED with no attempts and nothing published yet. */
     public static Disbursement initiate(
             UUID id,
             UUID loanId,
@@ -64,6 +66,7 @@ public record Disbursement(
                 null,
                 null,
                 0,
+                false,
                 null,
                 now,
                 now,
@@ -71,16 +74,43 @@ public record Disbursement(
     }
 
     public Disbursement withAttemptStarted(Instant now) {
-        return copy(status, railRef, utr, disbursementDate, attempts + 1, failureReason, now);
+        return copy(
+                status,
+                railRef,
+                utr,
+                disbursementDate,
+                attempts + 1,
+                initiatedPublished,
+                failureReason,
+                now);
     }
 
-    public Disbursement succeeded(String railRef, String utr, LocalDate date, Instant now) {
-        return copy(DisbursementStatus.SUCCEEDED, railRef, utr, date, attempts, null, now);
+    public Disbursement markInitiatedPublished(Instant now) {
+        return copy(status, railRef, utr, disbursementDate, attempts, true, failureReason, now);
+    }
+
+    public Disbursement succeeded(String newRailRef, String newUtr, LocalDate date, Instant now) {
+        return copy(
+                DisbursementStatus.SUCCEEDED,
+                newRailRef,
+                newUtr,
+                date,
+                attempts,
+                initiatedPublished,
+                null,
+                now);
     }
 
     public Disbursement failed(String reason, Instant now) {
         return copy(
-                DisbursementStatus.FAILED, railRef, utr, disbursementDate, attempts, reason, now);
+                DisbursementStatus.FAILED,
+                railRef,
+                utr,
+                disbursementDate,
+                attempts,
+                initiatedPublished,
+                reason,
+                now);
     }
 
     public Disbursement toManualReview(Instant now) {
@@ -90,13 +120,21 @@ public record Disbursement(
                 utr,
                 disbursementDate,
                 attempts,
+                initiatedPublished,
                 failureReason,
                 now);
     }
 
     public Disbursement reinitiated(Instant now) {
         return copy(
-                DisbursementStatus.INITIATED, railRef, utr, disbursementDate, attempts, null, now);
+                DisbursementStatus.INITIATED,
+                railRef,
+                utr,
+                disbursementDate,
+                attempts,
+                initiatedPublished,
+                null,
+                now);
     }
 
     private Disbursement copy(
@@ -105,6 +143,7 @@ public record Disbursement(
             String newUtr,
             LocalDate newDate,
             int newAttempts,
+            boolean newInitiatedPublished,
             String newReason,
             Instant now) {
         return new Disbursement(
@@ -120,6 +159,7 @@ public record Disbursement(
                 newUtr,
                 newDate,
                 newAttempts,
+                newInitiatedPublished,
                 newReason,
                 createdAt,
                 now,

@@ -1,5 +1,7 @@
 package com.lms.disbursement;
 
+import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
+
 import com.lms.testkit.arch.LmsArchRules;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
@@ -7,9 +9,9 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 /**
- * Platform rules (CLAUDE.md) on disbursement: no ThreadLocal, a Spring-free domain,
- * money/BigDecimal confined to lms-money, and preview concurrency confined to lms-concurrency.
- * Hexagonal layering is added alongside the adapters.
+ * Platform rules (CLAUDE.md) and hexagonal layering (docs/architecture.md) on disbursement: no
+ * ThreadLocal, a Spring-free (and Temporal-free) domain, money/BigDecimal confined to lms-money,
+ * preview concurrency confined to lms-concurrency, and adapters depending inward only.
  */
 @AnalyzeClasses(
         packages = "com.lms.disbursement",
@@ -25,4 +27,22 @@ class DisbursementArchTest {
     @ArchTest
     static final ArchRule previewConfined =
             LmsArchRules.PREVIEW_CONCURRENCY_ONLY_IN_LMS_CONCURRENCY;
+
+    @ArchTest
+    static final ArchRule hexagonalLayering =
+            layeredArchitecture()
+                    .consideringOnlyDependenciesInLayers()
+                    .layer("Domain")
+                    .definedBy("com.lms.disbursement.domain..")
+                    .layer("Application")
+                    .definedBy("com.lms.disbursement.application..")
+                    .layer("Adapters")
+                    .definedBy("com.lms.disbursement.adapters..")
+                    .whereLayer("Adapters")
+                    .mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Application")
+                    .mayOnlyBeAccessedByLayers("Adapters")
+                    .whereLayer("Domain")
+                    .mayOnlyBeAccessedByLayers("Application", "Adapters")
+                    .allowEmptyShould(true);
 }

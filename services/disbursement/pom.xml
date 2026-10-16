@@ -37,6 +37,14 @@
       <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.confluent</groupId>
+      <artifactId>kafka-avro-serializer</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.github.resilience4j</groupId>
       <artifactId>resilience4j-retry</artifactId>
     </dependency>
@@ -162,7 +170,10 @@
             <exclude>com/lms/disbursement/adapters/out/rail/Http*</exclude>
             <exclude>com/lms/disbursement/adapters/out/events/*</exclude>
             <exclude>com/lms/disbursement/adapters/out/temporal/*</exclude>
+            <exclude>com/lms/disbursement/adapters/out/rail/*</exclude>
             <exclude>com/lms/disbursement/adapters/in/kafka/*</exclude>
+            <exclude>com/lms/disbursement/adapters/in/web/AdminController*</exclude>
+            <exclude>com/lms/disbursement/adapters/in/web/DisbursementExceptionHandler*</exclude>
           </excludes>
         </configuration>
       </plugin>

@@ -30,9 +30,27 @@ lms:
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
   sim:
     base-url: ${SIM_BASE_URL:http://localhost:8190}
+  callback:
+    secret: ${LMS_CALLBACK_SECRET:local-dev-callback-secret}
+    tolerance-seconds: ${CALLBACK_TOLERANCE_SECONDS:300}
+  temporal:
+    target: ${TEMPORAL_TARGET:127.0.0.1:7233}
+    task-queue: ${TEMPORAL_TASK_QUEUE:disbursement}
+    ui-base-url: ${TEMPORAL_UI_BASE_URL:http://localhost:8233}
+  rail:
+    retry:
+      max-attempts: ${RAIL_RETRY_MAX_ATTEMPTS:3}
+      wait-ms: ${RAIL_RETRY_WAIT_MS:200}
   disbursement:
-    otp-ttl-minutes: ${OTP_TTL_MINUTES:5}
-    kyc-callback-url: ${KYC_CALLBACK_URL:http://localhost:8101/disbursements/kyc/callback}
+    callback-url: ${DISBURSEMENT_CALLBACK_URL:http://localhost:8105/callbacks/rail}
+    # 30-minute payout timeout in production; the e2e/tests override to seconds.
+    payout-timeout-seconds: ${PAYOUT_TIMEOUT_SECONDS:1800}
+    poll-rounds: ${PAYOUT_POLL_ROUNDS:5}
+    poll-backoff-seconds: ${PAYOUT_POLL_BACKOFF_SECONDS:30}
+    max-attempts: ${PAYOUT_MAX_ATTEMPTS:3}
+    retry-backoff-seconds: ${PAYOUT_RETRY_BACKOFF_SECONDS:5}
+    retry-multiplier: ${PAYOUT_RETRY_MULTIPLIER:2.0}
+    activity-timeout-seconds: ${PAYOUT_ACTIVITY_TIMEOUT_SECONDS:30}
 
 management:
   endpoint:
