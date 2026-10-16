@@ -77,7 +77,7 @@ class LedgerServicesTest {
         var result =
                 postService.post(
                         new PostingRequest(
-                                "loan.repayment-allocated",
+                                "loan.written-off", // penal/write-off templates arrive in Phase 4
                                 UUID.randomUUID(),
                                 "loan-1",
                                 "cust-1",

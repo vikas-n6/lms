@@ -2,6 +2,8 @@ package com.lms.ledger.adapters.in.kafka;
 
 import com.lms.contracts.events.MoneyAmount;
 import com.lms.contracts.loan.LoanInterestAccrued;
+import com.lms.contracts.loan.LoanRepaymentAllocated;
+import com.lms.contracts.loan.LoanRepaymentReversed;
 import com.lms.ledger.application.PostEntryService;
 import com.lms.ledger.application.PostingRequest;
 import com.lms.money.Money;
@@ -14,9 +16,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Posts ledger entries for loan events. In Phase 2 only {@code loan.interest-accrued} posts (DR
- * Interest receivable / CR Interest income); repayment/penal/write-off templates arrive in Phases
- * 3–4. Idempotent via the inbox and the unique {@code source_event_id}.
+ * Posts ledger entries for loan events: {@code loan.interest-accrued} (DR Interest receivable / CR
+ * Interest income), and in Phase 3 {@code loan.repayment-allocated} (DR Customer suspense / CR the
+ * component receivables) and {@code loan.repayment-reversed} (the mirror). Idempotent via the inbox
+ * and the unique {@code source_event_id}. A zero-total allocation posts nothing (nothing left
+ * suspense).
  */
 @Component
 public class LoanLedgerListener {
@@ -34,22 +38,55 @@ public class LoanLedgerListener {
     @KafkaListener(topics = TOPIC, groupId = "ledger")
     @Transactional
     public void onMessage(Object payload) {
-        if (!(payload instanceof LoanInterestAccrued event)) {
-            return; // other loan events do not post in Phase 2
+        if (payload instanceof LoanInterestAccrued event) {
+            post(
+                    event.getMetadata().getEventId(),
+                    "loan.interest-accrued",
+                    event.getLoanId(),
+                    currency(event.getAmount()),
+                    Map.of("interest", money(event.getAmount())));
+        } else if (payload instanceof LoanRepaymentAllocated event) {
+            if (event.getTotalAllocated().getMinorUnits() == 0L) {
+                return; // everything held as advance; nothing leaves suspense
+            }
+            post(
+                    event.getMetadata().getEventId(),
+                    "loan.repayment-allocated",
+                    event.getLoanId(),
+                    currency(event.getTotalAllocated()),
+                    Map.of(
+                            "total", money(event.getTotalAllocated()),
+                            "penal", money(event.getPenal()),
+                            "interest", money(event.getInterest()),
+                            "principal", money(event.getPrincipal())));
+        } else if (payload instanceof LoanRepaymentReversed event) {
+            post(
+                    event.getMetadata().getEventId(),
+                    "loan.repayment-reversed",
+                    event.getLoanId(),
+                    currency(event.getTotalReversed()),
+                    Map.of(
+                            "total", money(event.getTotalReversed()),
+                            "penal", money(event.getPenal()),
+                            "interest", money(event.getInterest()),
+                            "principal", money(event.getPrincipal())));
         }
-        UUID eventId = UUID.fromString(event.getMetadata().getEventId());
+    }
+
+    private void post(
+            String eventIdRaw,
+            String eventType,
+            String loanId,
+            Currency currency,
+            Map<String, Money> amounts) {
+        UUID eventId = UUID.fromString(eventIdRaw);
         idempotent.process(
                 eventId,
                 TOPIC,
                 () ->
                         postService.post(
                                 new PostingRequest(
-                                        "loan.interest-accrued",
-                                        eventId,
-                                        event.getLoanId(),
-                                        null,
-                                        currency(event.getAmount()),
-                                        Map.of("interest", money(event.getAmount())))));
+                                        eventType, eventId, loanId, null, currency, amounts)));
     }
 
     private static Money money(MoneyAmount amount) {

@@ -75,12 +75,103 @@ class PostingTemplateTest {
     }
 
     @Test
-    void onlyThePhase2TemplatesAreRegistered() {
+    void phase2And3TemplatesAreRegistered() {
         assertThat(registry.handles("disbursement.initiated")).isTrue();
         assertThat(registry.handles("disbursement.succeeded")).isTrue();
         assertThat(registry.handles("disbursement.failed")).isTrue();
         assertThat(registry.handles("loan.interest-accrued")).isTrue();
-        // Repayment/penal/write-off arrive in Phases 3-4.
-        assertThat(registry.handles("loan.repayment-allocated")).isFalse();
+        // Phase 3 repayment templates.
+        assertThat(registry.handles("repayment.received")).isTrue();
+        assertThat(registry.handles("loan.repayment-allocated")).isTrue();
+        assertThat(registry.handles("repayment.reversed")).isTrue();
+        assertThat(registry.handles("loan.repayment-reversed")).isTrue();
+        assertThat(registry.handles("repayment.refunded")).isTrue();
+        // Penal/write-off arrive in Phase 4.
+        assertThat(registry.handles("loan.written-off")).isFalse();
+    }
+
+    private long creditsFor(String eventType, Map<String, Money> amounts) {
+        var template = registry.find(eventType).orElseThrow();
+        var postings = template.build(new PostingInput("loan-1", "cust-1", INR, amounts));
+        return postings.stream()
+                .filter(p -> p.side() == PostingSide.CREDIT)
+                .mapToLong(p -> p.amount().minorUnits())
+                .sum();
+    }
+
+    @Test
+    void repaymentReceivedDebitsBankCreditsSuspense() {
+        var postings =
+                registry.find("repayment.received")
+                        .orElseThrow()
+                        .build(
+                                new PostingInput(
+                                        "loan-1", "cust-1", INR, Map.of("amount", inr(474_000))));
+        Posting debit =
+                postings.stream()
+                        .filter(p -> p.side() == PostingSide.DEBIT)
+                        .findFirst()
+                        .orElseThrow();
+        Posting credit =
+                postings.stream()
+                        .filter(p -> p.side() == PostingSide.CREDIT)
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(debit.account()).isEqualTo(AccountCode.BANK_OPERATING);
+        assertThat(credit.account()).isEqualTo(AccountCode.CUSTOMER_SUSPENSE);
+        assertThat(debit.amount()).isEqualTo(inr(474_000));
+    }
+
+    @Test
+    void allocatedSplitsSuspenseAcrossComponentsAndBalances() {
+        Map<String, Money> amounts =
+                Map.of(
+                        "total", inr(474_000),
+                        "penal", inr(0),
+                        "interest", inr(100_000),
+                        "principal", inr(374_000));
+        assertThat(debitsFor("loan.repayment-allocated", amounts)).isEqualTo(474_000L);
+        assertThat(creditsFor("loan.repayment-allocated", amounts)).isEqualTo(474_000L);
+        // zero penal component is omitted: two credit lines (interest, principal) + one debit.
+        var postings =
+                registry.find("loan.repayment-allocated")
+                        .orElseThrow()
+                        .build(new PostingInput("loan-1", "cust-1", INR, amounts));
+        assertThat(postings).hasSize(3);
+    }
+
+    @Test
+    void reversalsMirrorTheReceiptAndAllocation() {
+        assertThat(debitsFor("repayment.reversed", Map.of("amount", inr(474_000))))
+                .isEqualTo(474_000L);
+        assertThat(creditsFor("repayment.reversed", Map.of("amount", inr(474_000))))
+                .isEqualTo(474_000L);
+
+        Map<String, Money> alloc =
+                Map.of(
+                        "total", inr(474_000),
+                        "penal", inr(0),
+                        "interest", inr(100_000),
+                        "principal", inr(374_000));
+        assertThat(debitsFor("loan.repayment-reversed", alloc)).isEqualTo(474_000L);
+        assertThat(creditsFor("loan.repayment-reversed", alloc)).isEqualTo(474_000L);
+    }
+
+    @Test
+    void overpaymentRefundDebitsSuspenseCreditsBank() {
+        var postings =
+                registry.find("repayment.refunded")
+                        .orElseThrow()
+                        .build(
+                                new PostingInput(
+                                        "loan-1", "cust-1", INR, Map.of("amount", inr(5_000))));
+        Posting debit =
+                postings.stream()
+                        .filter(p -> p.side() == PostingSide.DEBIT)
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(debit.account()).isEqualTo(AccountCode.CUSTOMER_SUSPENSE);
+        assertThat(creditsFor("repayment.refunded", Map.of("amount", inr(5_000))))
+                .isEqualTo(5_000L);
     }
 }
