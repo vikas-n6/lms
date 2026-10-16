@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "RepaymentFailed",
+  "namespace": "com.lms.contracts.repayment",
+  "doc": "Published on repayment.events when a payment attempt fails before funds are confirmed (e.g. a declined payment link). Informational for notification/collections; loan-account does not allocate anything. Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "repaymentId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "amount", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "channel", "type": "string", "doc": "MANDATE | PAYMENT_LINK | MANUAL" },
+    { "name": "reason", "type": "string", "doc": "Provider failure code / message" },
+    {
+      "name": "failedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

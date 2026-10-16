@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "LoanRepaymentReversed",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events after loan-account undoes a repayment allocation with new reversing records (never edits), reopening the affected instalments (docs/domain-rules.md 'Repayment allocation waterfall'). Component totals let the ledger reverse the Customer-suspense split. Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "repaymentId", "type": "string", "doc": "The original repayment whose allocation is reversed" },
+    { "name": "totalReversed", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "penal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "interest", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "principal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "advance", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Advance that was held and is now released" },
+    {
+      "name": "reversedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

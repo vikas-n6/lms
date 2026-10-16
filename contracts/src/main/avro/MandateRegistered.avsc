@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "MandateRegistered",
+  "namespace": "com.lms.contracts.repayment",
+  "doc": "Published on repayment.events when an auto-debit mandate is registered for a loan (phase prompt task 3). Informational for notification/collections. Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "mandateId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+    { "name": "status", "type": "string", "doc": "ACTIVE | PENDING" },
+    {
+      "name": "registeredAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

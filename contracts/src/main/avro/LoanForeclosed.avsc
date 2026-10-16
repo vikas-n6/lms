@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "LoanForeclosed",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events when a foreclosure payment at least equal to the quote is allocated and the loan moves to Foreclosed (docs/domain-rules.md 'Loan state machine'). Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "repaymentId", "type": "string", "doc": "The foreclosure repayment" },
+    { "name": "foreclosureAmount", "type": "com.lms.contracts.events.MoneyAmount", "doc": "The quoted amount that was paid" },
+    {
+      "name": "foreclosedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

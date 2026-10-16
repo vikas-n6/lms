@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "MandateDebitFailed",
+  "namespace": "com.lms.contracts.repayment",
+  "doc": "Published on repayment.events when an auto-debit attempt fails (phase prompt task 3). A failed debit is re-presented once, two business days later; rePresentOn carries that business date (null when no further attempt is scheduled). collections reacts to this. Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "mandateId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "amount", "type": "com.lms.contracts.events.MoneyAmount" },
+    {
+      "name": "dueDate",
+      "type": { "type": "int", "logicalType": "date" },
+      "doc": "The instalment due date the debit was for"
+    },
+    { "name": "failureCode", "type": "string", "doc": "Provider failure code, e.g. INSUFFICIENT_FUNDS" },
+    {
+      "name": "rePresentOn",
+      "type": ["null", { "type": "int", "logicalType": "date" }],
+      "default": null,
+      "doc": "Business date of the single re-presentation; null if none scheduled"
+    },
+    {
+      "name": "failedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

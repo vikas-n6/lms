@@ -10,6 +10,24 @@
     { "name": "amount", "type": "com.lms.contracts.events.MoneyAmount" },
     { "name": "railReference", "type": "string" },
     {
+      "name": "channel",
+      "type": "string",
+      "default": "MANDATE",
+      "doc": "MANDATE | PAYMENT_LINK | MANUAL"
+    },
+    {
+      "name": "purpose",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "null for an ordinary repayment; FORECLOSURE for a foreclosure payment"
+    },
+    {
+      "name": "foreclosureQuoteId",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Quote id when purpose = FORECLOSURE (loan-account re-validates the amount against the quote)"
+    },
+    {
       "name": "receivedAt",
       "type": { "type": "long", "logicalType": "timestamp-millis" }
     }

@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "RepaymentReversed",
+  "namespace": "com.lms.contracts.repayment",
+  "doc": "Published on repayment.events when a previously confirmed receipt is returned (e.g. a bounced mandate debit returned after it had succeeded). loan-account undoes the allocation with new reversing records and ledger reverses the receipt and allocation entries (docs/domain-rules.md). Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "repaymentId", "type": "string", "doc": "The original repayment being reversed" },
+    { "name": "loanId", "type": "string" },
+    { "name": "amount", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "railReference", "type": "string" },
+    { "name": "reason", "type": "string", "doc": "e.g. DEBIT_RETURNED" },
+    {
+      "name": "reversedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}
