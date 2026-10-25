@@ -5,3 +5,9 @@
 :root {
   color-scheme: light dark;
 }
+
+@layer components {
+  .input {
+    @apply w-full rounded border border-neutral-300 px-2 py-1;
+  }
+}

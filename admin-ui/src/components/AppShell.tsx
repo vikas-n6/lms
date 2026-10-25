@@ -10,6 +10,9 @@ const navItems = [
   { to: "/review-queue", label: "Review queue" },
   { to: "/decisions", label: "Decision explainer" },
   { to: "/loans", label: "Loans" },
+  { to: "/disbursements", label: "Disbursements" },
+  { to: "/repayments", label: "Repayments" },
+  { to: "/mandates", label: "Mandates" },
   { to: "/ledger", label: "Ledger" },
   { to: "/simulators", label: "Simulators" },
 ];
