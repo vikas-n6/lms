@@ -119,3 +119,36 @@ Debugging the loan/ledger path:
   idempotent on `source_event_id`. The trial balance metric is `ledger_trial_balance_diff_minor_units`
   (Prometheus) and must be zero.
 - Business date is the Redis key `lms:platform:business-date`; unset = today in Asia/Kolkata.
+
+## Phase 3: money movement (Docker session)
+
+```bash
+# disbursement (8105) needs the Temporal dev server, so add the `workflow` profile; repayment (8106)
+# is in `apps`. The simulators sign callbacks with LMS_CALLBACK_SECRET (must match the services').
+docker compose -f deploy/docker-compose.yml \
+  --profile core --profile auth --profile workflow --profile apps up -d
+
+# End-to-end (run phase1.sh/phase2.sh first for an accepted application):
+scripts/e2e/phase3.sh
+
+# Drive by hand (admin token):
+#   disbursement monitor:            GET  /api/disbursements ; GET /api/disbursements/{id}
+#   retry/cancel from MANUAL_REVIEW: POST /api/disbursements/{id}/retry | /cancel
+#   register a mandate:              POST /api/mandates {"loanId":"..","customerId":".."}
+#   auto-debit job for a date:       POST /api/admin/jobs/auto-debit/run?date=YYYY-MM-DD
+#   payment link / manual receipt:   POST /api/repayments | /api/repayments/manual
+#   signed provider callbacks:       POST /callbacks/rail | /callbacks/payments | /callbacks/mandates
+# Tune the rail/mandate/payments simulators (admin): PUT /api/sim/config/{rail|mandate|payments}
+#   knobs: unknownOutcomeRate, outOfOrderRate, returnRate (+ latency/failure/duplicate/delay).
+# k6 callback latency (informational): k6 run -e BASE=http://localhost:8080 \
+#   -e SECRET=local-dev-callback-secret scripts/k6/phase3-callback-latency.js
+```
+
+Debugging the money-movement path:
+- A payout stuck → open the disbursement monitor's Temporal-UI link (`disb-{loanId}`); the saga waits
+  for the signed `/callbacks/rail` or polls status. A conflicting terminal callback is dropped and
+  counted in `lms_disbursement_callback_conflicts` (Prometheus).
+- An unsigned/forged callback → the service returns 401 (`CallbackVerifier`); callbacks bypass JWT at
+  the gateway but require the HMAC. Duplicates dedup on `(railRef,status)` / `(providerReference,status)`.
+- A bounced debit → the mandate callback `RETURNED` publishes `repayment.reversed`; loan-account
+  reverses the allocation (new rows, instalments reopened) and ledger reverses the receipt + allocation.

@@ -5,21 +5,25 @@ loan accounts, disbursement, repayment, collections, a double-entry ledger, and 
 personal learning project — regulations are mocked and every external party (bureau, KYC, payment
 rail, SMS) is a simulator we own. See `CLAUDE.md`, `docs/architecture.md` and `docs/domain-rules.md`.
 
-## Status — Phase 2 (Loan core + ledger)
+## Status — Phase 3 (Money movement)
 
-Phases 0–1 (foundations, origination, decisioning) plus Phase 2: `loan-account` (8104) turns an
-accepted offer into a loan with a reducing-balance EMI schedule, runs the loan state machine, daily
-interest accrual, the repayment allocation waterfall and foreclosure quotes; `ledger` (8108) is a
-double-entry ledger with versioned posting templates, immutable balanced journal entries, a trial
-balance and admin reversal. A shared `BusinessCalendar` drives all date logic. The money-critical
-core (schedule, allocation, accrual, state machine, ledger invariants) is proven by unit and jqwik
-property tests under `./mvnw clean verify`.
+Phases 0–2 (foundations, origination, decisioning, loan core + ledger) plus Phase 3: `disbursement`
+(8105) pays a loan out through a **durable Temporal saga** that survives timeouts, duplicate/
+out-of-order callbacks and crashes and never double-pays (query-status-before-retry); `repayment`
+(8106) owns mandates, auto-debit, payment links and manual receipts, recording confirmed funds as
+`repayment.received` and returns as `repayment.reversed`, with no access to the loan database. All
+provider callbacks are HMAC-signed (ADR 0009) and deduped; `loan-account` runs the allocation
+waterfall, repayment reversal and foreclosure close; `ledger` posts the receipt/allocation/reversal
+templates. The money-critical core — the saga (proven in-JVM via Temporal's `TestWorkflowEnvironment`
++ `WorkflowReplayer`), callback signing/dedup, posting templates, reversal and foreclosure
+transitions — is proven under `./mvnw clean verify`.
 
 > **Docker note:** the build machine has no container runtime, so container-dependent items
-> (Testcontainers `*IT`, the SQL constraint/replay/concurrency tests, `docker compose up`, the
-> `scripts/e2e/phase*.sh` runs, the outbox→Kafka relay, Admin UI OIDC login) are **authored but not
-> yet executed**. They are tracked in `docs/backlog.md` and run in a session with Docker. The
-> `phase-2-done` tag is withheld until they pass.
+> (Testcontainers `*IT`, the live Temporal/Kafka/Redis runs, the crash/replay-against-a-real-broker
+> tests, `docker compose up`, the `scripts/e2e/phase*.sh` runs, the k6 callback check, the
+> outbox→Kafka relay, Admin UI OIDC login) are **authored but not yet executed**. They are tracked
+> in `docs/backlog.md` and run in a session with Docker. The `phase-3-done` tag is withheld until
+> they pass (the same discipline as the earlier phases).
 
 ## Prerequisites
 
@@ -79,6 +83,8 @@ make e2e              # scripts/e2e/phase0.sh: token -> POST via gateway -> even
                       # outbox drained -> survives a Kafka restart
 scripts/e2e/phase1.sh # Phase 1: register -> KYC -> bank -> apply -> decision -> offer -> accept,
                       # plus persona reject/refer-override/delinquent, velocity and bureau-down
+scripts/e2e/phase3.sh # Phase 3: disbursement saga (happy/unknown-outcome/duplicate/conflict/crash),
+                      #          repayment waterfall, returned debit, foreclosure; trial balance zero
 scripts/e2e/phase2.sh # Phase 2: accepted application -> loan -> simulate-disbursement -> accrue over
                       # the life -> full repayment -> CLOSED; ledger trial balance stays zero
 ```
