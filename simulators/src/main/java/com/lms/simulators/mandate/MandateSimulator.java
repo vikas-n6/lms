@@ -164,7 +164,8 @@ public class MandateSimulator {
         }
 
         DebitCallback toCallback(String status) {
-            return new DebitCallback(idempotencyKey, mandateId, loanId, status, failureCode);
+            return new DebitCallback(
+                    idempotencyKey, mandateId, loanId, amountMinor, currency, status, failureCode);
         }
     }
 
@@ -173,6 +174,8 @@ public class MandateSimulator {
             String idempotencyKey,
             String mandateId,
             String loanId,
+            long amountMinor,
+            String currency,
             String status,
             String failureCode) {}
 }

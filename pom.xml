@@ -82,6 +82,7 @@
     <module>services/notification</module>
     <module>simulators</module>
     <module>services/disbursement</module>
+  <module>services/repayment</module>
 </modules>
 
   <dependencyManagement>
@@ -418,6 +419,7 @@
       <modules>
         <module>admin-ui</module>
         <module>services/disbursement</module>
+  <module>services/repayment</module>
 </modules>
     </profile>
   </profiles>

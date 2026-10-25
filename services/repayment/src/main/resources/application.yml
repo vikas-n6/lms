@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: repayment
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/repayment}
+    username: ${DB_USER:repayment}
+    password: ${DB_PASSWORD:repayment}
+  flyway:
+    enabled: true
+    # Service migrations start at V0100; the shared outbox/inbox location supplies V0001.
+    locations: classpath:db/migration,classpath:db/migration/outbox
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/lms}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: ${SERVER_PORT:8106}
+
+lms:
+  currency:
+    default: ${LMS_CURRENCY_DEFAULT:INR}
+  kafka:
+    schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  sim:
+    base-url: ${SIM_BASE_URL:http://localhost:8190}
+  gateway:
+    base-url: ${GATEWAY_BASE_URL:http://localhost:8080}
+  callback:
+    secret: ${LMS_CALLBACK_SECRET:local-dev-callback-secret}
+    tolerance-seconds: ${CALLBACK_TOLERANCE_SECONDS:300}
+  repayment:
+    payments-callback-url: ${PAYMENTS_CALLBACK_URL:http://localhost:8106/callbacks/payments}
+    mandate-callback-url: ${MANDATE_CALLBACK_URL:http://localhost:8106/callbacks/mandates}
+    re-present-business-days: ${RE_PRESENT_BUSINESS_DAYS:2}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
