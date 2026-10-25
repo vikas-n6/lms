@@ -12,4 +12,17 @@ import java.util.UUID;
 public interface AllocationRepository {
 
     void saveAll(UUID loanId, String repaymentId, List<Allocation> allocations);
+
+    /** The original allocation lines recorded for a repayment (used to reverse it). */
+    List<Allocation> findByRepaymentId(UUID loanId, String repaymentId);
+
+    /**
+     * Record reversing rows for a returned repayment — new rows, never an edit (the table is
+     * append-only). {@code reversedRepaymentId} links each row back to the repayment being undone.
+     */
+    void saveReversal(
+            UUID loanId,
+            String reversalRepaymentId,
+            String reversedRepaymentId,
+            List<Allocation> allocations);
 }

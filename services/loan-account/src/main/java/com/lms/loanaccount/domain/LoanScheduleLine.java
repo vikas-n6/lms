@@ -101,6 +101,26 @@ public record LoanScheduleLine(
                 provisional);
     }
 
+    /**
+     * A copy with the given amounts removed from the paid components, reopening the instalment when
+     * a repayment is reversed (docs/domain-rules.md "Repayment allocation waterfall" rule 5). The
+     * amounts must not exceed what was paid (the caller reverses exactly a prior allocation).
+     */
+    public LoanScheduleLine reversePayment(
+            Money fromPenal, Money fromInterest, Money fromPrincipal) {
+        return new LoanScheduleLine(
+                loanId,
+                instalmentNumber,
+                dueDate,
+                principal,
+                interest,
+                paidPrincipal.subtract(fromPrincipal),
+                paidInterest.subtract(fromInterest),
+                penalAccrued,
+                penalPaid.subtract(fromPenal),
+                provisional);
+    }
+
     /** A copy with more penal accrued on this instalment. */
     public LoanScheduleLine accruePenal(Money amount) {
         return new LoanScheduleLine(

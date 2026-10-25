@@ -204,12 +204,31 @@ final class LoanAccountFakes {
 
     static final class FakeAllocationRepository implements AllocationRepository {
         final List<Allocation> saved = new ArrayList<>();
+        final Map<String, List<Allocation>> byRepayment = new LinkedHashMap<>();
+        final List<Allocation> reversed = new ArrayList<>();
         String lastRepaymentId;
+        String lastReversalOf;
 
         @Override
         public void saveAll(UUID loanId, String repaymentId, List<Allocation> allocations) {
             this.lastRepaymentId = repaymentId;
             this.saved.addAll(allocations);
+            byRepayment.computeIfAbsent(repaymentId, k -> new ArrayList<>()).addAll(allocations);
+        }
+
+        @Override
+        public List<Allocation> findByRepaymentId(UUID loanId, String repaymentId) {
+            return List.copyOf(byRepayment.getOrDefault(repaymentId, List.of()));
+        }
+
+        @Override
+        public void saveReversal(
+                UUID loanId,
+                String reversalRepaymentId,
+                String reversedRepaymentId,
+                List<Allocation> allocations) {
+            this.lastReversalOf = reversedRepaymentId;
+            this.reversed.addAll(allocations);
         }
     }
 
@@ -247,6 +266,25 @@ final class LoanAccountFakes {
                 UUID causationEventId) {
             this.lastAllocation = result;
             events.add("loan.repayment-allocated:" + repaymentId);
+        }
+
+        @Override
+        public void repaymentReversed(
+                UUID loanId,
+                String loanNumber,
+                String repaymentId,
+                Money penal,
+                Money interest,
+                Money principal,
+                UUID causationEventId) {
+            events.add("loan.repayment-reversed:" + repaymentId);
+        }
+
+        @Override
+        public void loanForeclosed(
+                Loan loan, String repaymentId, Money foreclosureAmount, UUID causationEventId) {
+            events.add(
+                    "loan.foreclosed:" + loan.loanNumber() + ":" + foreclosureAmount.minorUnits());
         }
 
         @Override

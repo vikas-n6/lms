@@ -32,6 +32,18 @@ public interface LoanEventPublisher {
             AllocationResult result,
             UUID causationEventId);
 
+    void repaymentReversed(
+            UUID loanId,
+            String loanNumber,
+            String repaymentId,
+            Money penal,
+            Money interest,
+            Money principal,
+            UUID causationEventId);
+
+    void loanForeclosed(
+            Loan loan, String repaymentId, Money foreclosureAmount, UUID causationEventId);
+
     void loanClosed(Loan loan, String reason, UUID causationEventId);
 
     void loanCancelled(Loan loan, String reason, UUID causationEventId);

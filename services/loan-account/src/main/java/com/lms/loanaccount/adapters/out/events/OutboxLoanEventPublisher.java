@@ -5,8 +5,10 @@ import com.lms.contracts.loan.LoanActivated;
 import com.lms.contracts.loan.LoanCancelled;
 import com.lms.contracts.loan.LoanClosed;
 import com.lms.contracts.loan.LoanCreated;
+import com.lms.contracts.loan.LoanForeclosed;
 import com.lms.contracts.loan.LoanInterestAccrued;
 import com.lms.contracts.loan.LoanRepaymentAllocated;
+import com.lms.contracts.loan.LoanRepaymentReversed;
 import com.lms.events.EventHeaders;
 import com.lms.events.EventMeta;
 import com.lms.events.EventMetadataMapper;
@@ -136,6 +138,50 @@ public class OutboxLoanEventPublisher implements LoanEventPublisher {
                         .setAllocatedAt(clock.instant())
                         .build();
         append(meta, id, event);
+    }
+
+    @Override
+    public void repaymentReversed(
+            UUID loanId,
+            String loanNumber,
+            String repaymentId,
+            Money penal,
+            Money interest,
+            Money principal,
+            UUID causationEventId) {
+        String id = loanId.toString();
+        EventMeta meta = meta("loan.repayment-reversed", id, causationEventId);
+        Money total = penal.add(interest).add(principal);
+        LoanRepaymentReversed event =
+                LoanRepaymentReversed.newBuilder()
+                        .setMetadata(EventMetadataMapper.toAvro(meta))
+                        .setLoanId(id)
+                        .setRepaymentId(repaymentId)
+                        .setTotalReversed(money(total))
+                        .setPenal(money(penal))
+                        .setInterest(money(interest))
+                        .setPrincipal(money(principal))
+                        .setAdvance(money(Money.zero(total.currency())))
+                        .setReversedAt(clock.instant())
+                        .build();
+        append(meta, id, event);
+    }
+
+    @Override
+    public void loanForeclosed(
+            Loan loan, String repaymentId, Money foreclosureAmount, UUID causationEventId) {
+        String loanId = loan.id().toString();
+        EventMeta meta = meta("loan.foreclosed", loanId, causationEventId);
+        LoanForeclosed event =
+                LoanForeclosed.newBuilder()
+                        .setMetadata(EventMetadataMapper.toAvro(meta))
+                        .setLoanId(loanId)
+                        .setLoanNumber(loan.loanNumber())
+                        .setRepaymentId(repaymentId)
+                        .setForeclosureAmount(money(foreclosureAmount))
+                        .setForeclosedAt(clock.instant())
+                        .build();
+        append(meta, loanId, event);
     }
 
     @Override

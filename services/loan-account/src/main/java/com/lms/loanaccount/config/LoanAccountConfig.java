@@ -7,7 +7,9 @@ import com.lms.loanaccount.application.ActivateLoanService;
 import com.lms.loanaccount.application.AllocateRepaymentService;
 import com.lms.loanaccount.application.CancelLoanService;
 import com.lms.loanaccount.application.CreateLoanService;
+import com.lms.loanaccount.application.ForecloseLoanService;
 import com.lms.loanaccount.application.LoanQueryService;
+import com.lms.loanaccount.application.ReverseAllocationService;
 import com.lms.loanaccount.application.port.out.AccrualRepository;
 import com.lms.loanaccount.application.port.out.AllocationRepository;
 import com.lms.loanaccount.application.port.out.LoanEventPublisher;
@@ -106,6 +108,38 @@ public class LoanAccountConfig {
             Clock clock) {
         return new AllocateRepaymentService(
                 loans, schedules, allocations, history, publisher, calendar, clock);
+    }
+
+    @Bean
+    public ReverseAllocationService reverseAllocationService(
+            LoanRepository loans,
+            ScheduleRepository schedules,
+            AllocationRepository allocations,
+            LoanEventPublisher publisher) {
+        return new ReverseAllocationService(loans, schedules, allocations, publisher);
+    }
+
+    @Bean
+    public ForecloseLoanService forecloseLoanService(
+            LoanRepository loans,
+            ScheduleRepository schedules,
+            AllocationRepository allocations,
+            StateHistoryRepository history,
+            LoanEventPublisher publisher,
+            LoanQueryService loanQueryService,
+            AllocateRepaymentService allocateRepaymentService,
+            BusinessCalendar calendar,
+            Clock clock) {
+        return new ForecloseLoanService(
+                loans,
+                schedules,
+                allocations,
+                history,
+                publisher,
+                loanQueryService,
+                allocateRepaymentService,
+                calendar,
+                clock);
     }
 
     @Bean
