@@ -95,3 +95,28 @@ real stack and settle the container-only items.
       (PenalAccrual, DpdBucket, state machine) but the daily penal/DPD job and write-off command are
       Phase 4 work; wire them there.
 - [ ] Tag `phase-2-done` once the Docker-session items above pass (mirrors the Phase 0/1 discipline).
+
+## Phase 3 (money movement) — deferred and known gaps
+
+- [ ] Docker session: run `scripts/e2e/phase3.sh` (happy path, unknown-outcome, duplicate/delayed/
+      conflicting callbacks, three-rail-failures → CANCELLED, **crash test**, waterfall, duplicate
+      payment callback, returned debit, foreclosure), with the `workflow` (Temporal) profile up.
+- [ ] Docker session: Temporal dev-server run proving `setUsingVirtualThreads` /
+      `setUsingVirtualWorkflowThreads` end-to-end (ADR 0008), plus the live crash/replay.
+- [ ] Docker session: broker/Redis-backed callback dedup on `(railRef,status)` and
+      `(providerReference,status)`; the k6 `scripts/k6/phase3-callback-latency.js` p95 < 200 ms check.
+- [ ] Schema Registry BACKWARD check for the Phase 3 events (repayment.failed/reversed, mandate.*,
+      loan.repayment-reversed/foreclosed) and the `repayment.received` field additions.
+- [ ] Foreclosure clears outstanding principal + due interest/penal and waives future scheduled
+      interest; the quote's actual/365 accrued interest and charge beyond those components are held as
+      advance (ADR 0005 simplification). Recognise that residual as interest income + charge in a
+      follow-up so the loan's suspense nets to zero at foreclosure.
+- [ ] Foreclosure via payment link: thread `purpose`/`foreclosureQuoteId` from `POST /repayments`
+      through to the payments callback (today only the manual-receipt path carries them; the
+      payment-link callback records an ordinary repayment). A pending-repayment-by-linkId lookup.
+- [ ] `GET /api/loans/due?date=` on loan-account for the repayment auto-debit job's
+      `DueInstalmentsPort` (gateway-mediated); not built yet (auto-debit returns no due loans until).
+- [ ] Repayment outbox relay + Kafka producer wiring (same deferral as the other services).
+- [ ] Admin UI Phase 3 pages (disbursement monitor, repayments, mandates, manual-collection dialog,
+      simulator rail/mandate/payments controls) — authored under `-Pui`; OIDC login verified in Docker.
+- [ ] Tag `phase-3-done` once the Docker-session items above pass (mirrors the Phase 0/1/2 discipline).

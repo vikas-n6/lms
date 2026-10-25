@@ -234,6 +234,8 @@ services:
     <<: *restart
     environment:
       SERVER_PORT: 8190
+      # Signs the rail/mandate/payments callbacks; must match the services' verifier secret.
+      LMS_CALLBACK_SECRET: ${LMS_CALLBACK_SECRET:-local-dev-callback-secret}
     ports: ["8190:8190"]
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8190/actuator/health/readiness || exit 1"]
@@ -342,6 +344,72 @@ services:
     ports: ["8108:8108"]
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8108/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  disbursement:
+    image: lms/disbursement:0.1.0-SNAPSHOT
+    # Needs the Temporal dev server: run with the `workflow` profile alongside `apps` (or `full`).
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      schema-registry: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      temporal: { condition: service_started }
+    environment:
+      SERVER_PORT: 8105
+      DB_URL: jdbc:postgresql://postgres:5432/disbursement
+      DB_USER: disbursement
+      DB_PASSWORD: ${DISBURSEMENT_DB_PASSWORD:-disbursement}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      TEMPORAL_TARGET: temporal:7233
+      TEMPORAL_UI_BASE_URL: http://localhost:8233
+      SIM_BASE_URL: http://simulators:8190
+      DISBURSEMENT_CALLBACK_URL: http://disbursement:8105/callbacks/rail
+      LMS_CALLBACK_SECRET: ${LMS_CALLBACK_SECRET:-local-dev-callback-secret}
+      JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8105:8105"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8105/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  repayment:
+    image: lms/repayment:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      schema-registry: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    environment:
+      SERVER_PORT: 8106
+      DB_URL: jdbc:postgresql://postgres:5432/repayment
+      DB_USER: repayment
+      DB_PASSWORD: ${REPAYMENT_DB_PASSWORD:-repayment}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      SIM_BASE_URL: http://simulators:8190
+      GATEWAY_BASE_URL: http://gateway:8080
+      PAYMENTS_CALLBACK_URL: http://repayment:8106/callbacks/payments
+      MANDATE_CALLBACK_URL: http://repayment:8106/callbacks/mandates
+      LMS_CALLBACK_SECRET: ${LMS_CALLBACK_SECRET:-local-dev-callback-secret}
+      JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8106:8106"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8106/actuator/health/readiness || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 20
