@@ -1,0 +1,21 @@
+{
+  "type": "record",
+  "name": "LoanPenalAccrued",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events once per (loanId, businessDate) by the daily penal-accrual job (docs/domain-rules.md 'Interest and penal accrual'): penal interest on overdue principal plus overdue interest after the grace period. Ledger posts debit Penal Receivable / credit Penal Income.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    {
+      "name": "businessDate",
+      "type": { "type": "int", "logicalType": "date" },
+      "doc": "The business date the penal interest was accrued for"
+    },
+    { "name": "amount", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Penal interest accrued on this day" },
+    { "name": "overdueBase", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Overdue principal plus overdue interest the penal was computed on" },
+    {
+      "name": "accruedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

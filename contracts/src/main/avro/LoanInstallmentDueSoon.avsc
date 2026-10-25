@@ -1,0 +1,21 @@
+{
+  "type": "record",
+  "name": "LoanInstallmentDueSoon",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events by the pre-due job (phase prompt task 1) a configurable number of business days (default 3) before an instalment falls due. notification reminds the customer. Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "instalmentNumber", "type": "int" },
+    {
+      "name": "dueDate",
+      "type": { "type": "int", "logicalType": "date" }
+    },
+    { "name": "amountDue", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Scheduled principal + interest for the instalment" },
+    {
+      "name": "notifiedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "record",
+  "name": "CollectionsReminderDue",
+  "namespace": "com.lms.contracts.collections",
+  "doc": "Published on collections.events when a dunning step fires an action (phase prompt task 4). notification turns it into a message on the step's channel. Deterministic per (caseId, stepId) so a replayed DPD tick never repeats it. Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "caseId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "stepId", "type": "string", "doc": "Dunning step identifier, e.g. DPD_7_SMS_REPRESENT" },
+    { "name": "dpdThreshold", "type": "int" },
+    { "name": "actionType", "type": "string", "doc": "SMS | EMAIL | SMS_EMAIL | SMS_REPRESENT | ESCALATE | FORMAL_NOTICE | FINAL_NOTICE | NPA_REVIEW | RECOMMEND_WRITE_OFF" },
+    { "name": "channel", "type": "string", "doc": "Primary notification channel for this action (SMS/EMAIL), or NONE for internal steps" },
+    { "name": "templateId", "type": "string" },
+    {
+      "name": "firedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

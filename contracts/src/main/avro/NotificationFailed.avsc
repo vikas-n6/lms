@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "NotificationFailed",
+  "namespace": "com.lms.contracts.notification",
+  "doc": "Published on notification.events when a message exhausts its retries on a channel and ends FAILED (phase prompt task 5). Carries no PII. Keyed by notificationId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "notificationId", "type": "string" },
+    { "name": "triggerEventId", "type": "string" },
+    { "name": "templateId", "type": "string" },
+    { "name": "channel", "type": "string" },
+    { "name": "attempts", "type": "int" },
+    { "name": "failureCode", "type": "string" },
+    {
+      "name": "failedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

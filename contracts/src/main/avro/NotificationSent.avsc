@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "NotificationSent",
+  "namespace": "com.lms.contracts.notification",
+  "doc": "Published on notification.events when a message is delivered through a channel simulator (phase prompt task 5). Carries no PII (CLAUDE.md 'Logging'): only ids, template, channel. Keyed by notificationId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "notificationId", "type": "string" },
+    { "name": "triggerEventId", "type": "string", "doc": "The source event that triggered this notification" },
+    { "name": "templateId", "type": "string" },
+    { "name": "channel", "type": "string", "doc": "SMS | EMAIL | PUSH | WHATSAPP" },
+    {
+      "name": "sentAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

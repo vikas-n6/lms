@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "LoanWrittenOff",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events when a write-off request is approved by a second admin (phase prompt task 2): DPD at least 180 and a two-person approval record. Ledger debits bad debt expense and reverses accrued interest/penal income, crediting the receivables. Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "requestId", "type": "string", "doc": "The write-off request that was approved" },
+    { "name": "principal", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Outstanding principal written off" },
+    { "name": "interest", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Unpaid accrued interest written off" },
+    { "name": "penal", "type": "com.lms.contracts.events.MoneyAmount", "doc": "Unpaid penal written off" },
+    { "name": "total", "type": "com.lms.contracts.events.MoneyAmount", "doc": "principal + interest + penal (the bad-debt expense)" },
+    { "name": "reason", "type": "string" },
+    { "name": "requestedBy", "type": "string", "doc": "Admin who raised the request" },
+    { "name": "approvedBy", "type": "string", "doc": "A different admin who approved it" },
+    {
+      "name": "writtenOffAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

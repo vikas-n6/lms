@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "CollectionsCaseClosed",
+  "namespace": "com.lms.contracts.collections",
+  "doc": "Published on collections.events when a case is resolved (overdue cleared), the loan is closed/written-off, or an agent manually resolves it (phase prompt task 4). Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "caseId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "status", "type": "string", "doc": "Terminal case status, e.g. RESOLVED | WRITTEN_OFF" },
+    { "name": "reason", "type": "string" },
+    {
+      "name": "closedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

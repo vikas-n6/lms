@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "CollectionsCaseOpened",
+  "namespace": "com.lms.contracts.collections",
+  "doc": "Published on collections.events when a collection case is opened at DPD 1 or more (phase prompt task 4). Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "caseId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "bucket", "type": "string" },
+    { "name": "daysPastDue", "type": "int" },
+    { "name": "planVersion", "type": "int", "doc": "Dunning plan version this case runs under" },
+    {
+      "name": "openedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

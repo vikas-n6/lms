@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "CollectionsEscalated",
+  "namespace": "com.lms.contracts.collections",
+  "doc": "Published on collections.events when a case escalates to the agent queue (DPD 15 step or a manual escalate), and for the formal/final-notice and NPA-review/write-off-recommended milestones (phase prompt task 4). Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "caseId", "type": "string" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    { "name": "status", "type": "string", "doc": "New case status, e.g. ESCALATED | WRITE_OFF_RECOMMENDED" },
+    { "name": "stepId", "type": ["null", "string"], "default": null },
+    { "name": "reason", "type": "string" },
+    {
+      "name": "escalatedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

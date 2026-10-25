@@ -1,0 +1,27 @@
+{
+  "type": "record",
+  "name": "LoanDpdUpdated",
+  "namespace": "com.lms.contracts.loan",
+  "doc": "Published on loan.events by the daily DPD job (phase prompt task 1) for every loan with DPD above zero each day, plus once when it returns to zero. Carries the bucket, days-past-due and the overdue amounts. collections signals this to the dunning workflow as a DpdTick. Keyed by loanId.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "loanId", "type": "string" },
+    { "name": "loanNumber", "type": "string" },
+    {
+      "name": "businessDate",
+      "type": { "type": "int", "logicalType": "date" },
+      "doc": "The business date the DPD was computed for"
+    },
+    { "name": "daysPastDue", "type": "int", "doc": "Days since the oldest unpaid due date (0 when cleared)" },
+    { "name": "bucket", "type": "string", "doc": "CURRENT | DPD_1_30 | DPD_31_60 | DPD_61_90 | NPA" },
+    { "name": "overduePrincipal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "overdueInterest", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "overduePenal", "type": "com.lms.contracts.events.MoneyAmount" },
+    { "name": "overdueTotal", "type": "com.lms.contracts.events.MoneyAmount", "doc": "penal + interest + principal overdue" },
+    { "name": "npa", "type": "boolean", "doc": "true at DPD 91 or more" },
+    {
+      "name": "updatedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

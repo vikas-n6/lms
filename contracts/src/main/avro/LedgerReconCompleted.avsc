@@ -2,16 +2,22 @@
   "type": "record",
   "name": "LedgerReconCompleted",
   "namespace": "com.lms.contracts.ledger",
-  "doc": "Published on ledger.events when the scheduled integrity job runs (docs/architecture.md topic catalogue). The trial balance must net to zero; a non-zero diffMinorUnits is an alert (balanced=false).",
+  "doc": "Published on ledger.events when a reconciliation run completes (docs/architecture.md topic catalogue). Two reconType values share this event (ADR 0012): TRIAL_BALANCE — the internal integrity check where diffMinorUnits must net to zero (balanced=false is an alert); BANK_RAIL — the daily match of the bank statement and rail settlement report against account 1001 postings, where the classification counts carry the result. The BANK_RAIL fields default to 0 so the historical TRIAL_BALANCE publish stays schema-compatible (BACKWARD).",
   "fields": [
     { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
     { "name": "reconRunId", "type": "string" },
     { "name": "currency", "type": "string" },
-    { "name": "diffMinorUnits", "type": "long", "doc": "Total debits minus total credits; 0 when healthy" },
-    { "name": "balanced", "type": "boolean" },
+    { "name": "diffMinorUnits", "type": "long", "doc": "TRIAL_BALANCE: total debits minus total credits; 0 when healthy" },
+    { "name": "balanced", "type": "boolean", "doc": "TRIAL_BALANCE: true when diffMinorUnits is 0; BANK_RAIL: true when every line is MATCHED" },
     {
       "name": "runAt",
       "type": { "type": "long", "logicalType": "timestamp-millis" }
-    }
+    },
+    { "name": "reconType", "type": "string", "default": "TRIAL_BALANCE", "doc": "TRIAL_BALANCE | BANK_RAIL" },
+    { "name": "matched", "type": "int", "default": 0 },
+    { "name": "missingInLedger", "type": "int", "default": 0 },
+    { "name": "missingInBank", "type": "int", "default": 0 },
+    { "name": "amountMismatch", "type": "int", "default": 0 },
+    { "name": "duplicate", "type": "int", "default": 0 }
   ]
 }
