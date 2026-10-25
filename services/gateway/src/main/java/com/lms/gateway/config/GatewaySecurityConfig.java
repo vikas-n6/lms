@@ -63,8 +63,19 @@ public class GatewaySecurityConfig {
                                                 "/actuator/info",
                                                 "/api/status")
                                         .permitAll()
+                                        // Signed provider callbacks bypass JWT; the downstream
+                                        // service verifies the HMAC signature (phase prompt S6).
+                                        .requestMatchers("/callbacks/**")
+                                        .permitAll()
                                         // Simulator control is admin-only (phase prompt S6).
                                         .requestMatchers("/api/sim/**")
+                                        .hasRole("ADMIN")
+                                        // Disbursement retry/cancel are admin-only (list/detail are
+                                        // GETs, covered by the read rule below).
+                                        .requestMatchers(HttpMethod.POST, "/api/disbursements/**")
+                                        .hasRole("ADMIN")
+                                        // Admin manual receipt is admin-only.
+                                        .requestMatchers(HttpMethod.POST, "/api/repayments/manual")
                                         .hasRole("ADMIN")
                                         // Admin ops (business date, job triggers, dev disbursement/
                                         // repayment) and ledger reversal are admin-only.

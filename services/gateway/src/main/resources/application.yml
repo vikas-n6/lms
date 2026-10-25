@@ -48,12 +48,34 @@ spring:
                 - Path=/api/journal-entries/**,/api/ledger/**
               filters:
                 - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: disbursement
+              uri: ${DISBURSEMENT_URI:http://localhost:8105}
+              predicates:
+                - Path=/api/disbursements/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: repayment
+              uri: ${REPAYMENT_URI:http://localhost:8106}
+              predicates:
+                - Path=/api/repayments/**,/api/mandates/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
             - id: simulators
               uri: ${SIM_URI:http://localhost:8190}
               predicates:
                 - Path=/api/sim/**
               filters:
                 - RewritePath=/api/(?<segment>.*), /$\{segment}
+            # Signed provider callbacks bypass JWT (the service verifies the signature) and keep
+            # their path (no /api rewrite), so the signed body the service verifies is unchanged.
+            - id: callbacks-rail
+              uri: ${DISBURSEMENT_URI:http://localhost:8105}
+              predicates:
+                - Path=/callbacks/rail
+            - id: callbacks-repayment
+              uri: ${REPAYMENT_URI:http://localhost:8106}
+              predicates:
+                - Path=/callbacks/payments,/callbacks/mandates
 
 server:
   port: ${SERVER_PORT:8080}
