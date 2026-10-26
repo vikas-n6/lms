@@ -5,25 +5,45 @@ loan accounts, disbursement, repayment, collections, a double-entry ledger, and 
 personal learning project — regulations are mocked and every external party (bureau, KYC, payment
 rail, SMS) is a simulator we own. See `CLAUDE.md`, `docs/architecture.md` and `docs/domain-rules.md`.
 
-## Status — Phase 3 (Money movement)
+## Status — Phase 4 (Collections and operations)
 
-Phases 0–2 (foundations, origination, decisioning, loan core + ledger) plus Phase 3: `disbursement`
-(8105) pays a loan out through a **durable Temporal saga** that survives timeouts, duplicate/
-out-of-order callbacks and crashes and never double-pays (query-status-before-retry); `repayment`
-(8106) owns mandates, auto-debit, payment links and manual receipts, recording confirmed funds as
-`repayment.received` and returns as `repayment.reversed`, with no access to the loan database. All
-provider callbacks are HMAC-signed (ADR 0009) and deduped; `loan-account` runs the allocation
-waterfall, repayment reversal and foreclosure close; `ledger` posts the receipt/allocation/reversal
-templates. The money-critical core — the saga (proven in-JVM via Temporal's `TestWorkflowEnvironment`
-+ `WorkflowReplayer`), callback signing/dedup, posting templates, reversal and foreclosure
-transitions — is proven under `./mvnw clean verify`.
+Phases 0–3 (foundations, origination, decisioning, loan core + ledger, money movement) plus Phase 4:
+delinquent loans move through DPD buckets, penal charges accrue, dunning runs as a durable workflow,
+notifications go out reliably, and a daily reconciliation compares the ledger with the simulated
+bank and rail reports.
+
+- **`loan-account` daily jobs** run in a fixed order per business date, each idempotent per
+  `(loanId, businessDate)`: mark DUE/OVERDUE (derived) → interest accrual → penal accrual (36% APR
+  simple on overdue principal + interest, only after the grace days) → DPD. It moves loans between
+  `Active` and `Delinquent`, flags `NPA` at DPD 91+, publishes `loan.penal-accrued` and
+  `loan.dpd-updated` (every day DPD > 0, plus once on return to zero), and a pre-due job emits
+  `loan.installment-due-soon`.
+- **Two-person write-off**: an admin raises a request (reason required, DPD ≥ 180); a *different*
+  admin approves it; on approval the loan is written off, receivables go to zero and
+  `loan.written-off` drives the ledger's bad-debt posting.
+- **`collections` (8107)** opens a case at DPD 1+ and runs a durable Temporal `DunningWorkflow`
+  (`dun-{loanId}`) that advances on DPD *ticks* (never wall-clock timers — ADR 0011), fires each
+  configured plan step once (`(caseId, stepId)` idempotency), pauses on a promise-to-pay and resumes
+  when broken, and cancels remaining steps when payment clears the overdue.
+- **`notification` (8109)** renders versioned templates over SMS/email/push/WhatsApp simulators,
+  dedups on `(eventId, templateId, channel)`, retries with backoff, respects consent and a
+  quiet-hours window (held overnight, released in the morning).
+- **Reconciliation** in `ledger` matches the bank statement and rail settlement report against the
+  money-movement entries, classifying MATCHED / MISSING_IN_LEDGER / MISSING_IN_BANK /
+  AMOUNT_MISMATCH / DUPLICATE and publishing `ledger.recon-completed` (ADR 0012).
+
+The money- and state-critical core — penal accrual and DPD derivation, the write-off state
+transition, the penal/write-off ledger templates, the dunning workflow (proven in-JVM via Temporal's
+`TestWorkflowEnvironment` + `WorkflowReplayer`), notification dedup/quiet-hours/retry, and the
+reconciliation matcher — is proven under `./mvnw clean verify`.
 
 > **Docker note:** the build machine has no container runtime, so container-dependent items
-> (Testcontainers `*IT`, the live Temporal/Kafka/Redis runs, the crash/replay-against-a-real-broker
-> tests, `docker compose up`, the `scripts/e2e/phase*.sh` runs, the k6 callback check, the
-> outbox→Kafka relay, Admin UI OIDC login) are **authored but not yet executed**. They are tracked
-> in `docs/backlog.md` and run in a session with Docker. The `phase-3-done` tag is withheld until
-> they pass (the same discipline as the earlier phases).
+> (Testcontainers `*IT`, the live Temporal/Kafka/Redis runs, the dunning crash/restart test,
+> `docker compose up`, the `scripts/e2e/phase*.sh` runs incl. `phase4.sh`, the k6 checks, the
+> outbox→Kafka relay, live channel delivery, Admin UI OIDC login) are **authored but not yet
+> executed**. They are tracked in `docs/backlog.md` and run in a session with Docker. The
+> `phase-3-done` and `phase-4-done` tags are withheld until they pass (the same discipline as the
+> earlier phases).
 
 ## Prerequisites
 
@@ -65,7 +85,8 @@ make reset            # stop + wipe volumes
 | Customer service | http://localhost:8101 |
 | Origination service | http://localhost:8102 |
 | Decision service | http://localhost:8103 |
-| Notification stub | http://localhost:8109 |
+| Collections service | http://localhost:8107 |
+| Notification service | http://localhost:8109 |
 | Simulators | http://localhost:8190 |
 | Admin UI | http://localhost:3002 (image) / 5173 (dev) |
 | Kafka UI | http://localhost:8089 |
@@ -87,6 +108,9 @@ scripts/e2e/phase3.sh # Phase 3: disbursement saga (happy/unknown-outcome/duplic
                       #          repayment waterfall, returned debit, foreclosure; trial balance zero
 scripts/e2e/phase2.sh # Phase 2: accepted application -> loan -> simulate-disbursement -> accrue over
                       # the life -> full repayment -> CLOSED; ledger trial balance stays zero
+scripts/e2e/phase4.sh # Phase 4: 3 loans over 12 months running the daily jobs in order; A on-time,
+                      #          B recovers, C -> NPA -> two-person write-off; dunning, notifications
+                      #          (dedup/quiet-hours/retry) and bank/rail reconciliation; TB zero
 ```
 
 ## Layout

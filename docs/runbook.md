@@ -152,3 +152,49 @@ Debugging the money-movement path:
   the gateway but require the HMAC. Duplicates dedup on `(railRef,status)` / `(providerReference,status)`.
 - A bounced debit → the mandate callback `RETURNED` publishes `repayment.reversed`; loan-account
   reverses the allocation (new rows, instalments reopened) and ledger reverses the receipt + allocation.
+
+## Phase 4: collections and operations (Docker session)
+
+```bash
+# collections (8107) needs the Temporal dev server, so add the `workflow` profile; notification
+# (8109) is in `apps`. Build images first (jib) as per Phase 0.
+docker compose -f deploy/docker-compose.yml \
+  --profile core --profile auth --profile workflow --profile apps up -d
+
+# End-to-end (3 loans over 12 months; run phase1/2/3 first to have ACTIVE loans):
+scripts/e2e/phase4.sh
+
+# Drive by hand (admin token):
+#   run the daily jobs in order for a date: POST /api/admin/jobs/daily/run?date=YYYY-MM-DD
+#     (or a single step: /api/admin/jobs/{interest-accrual|penal-accrual|dpd|due-soon}/run?date=)
+#   collections queue / case detail:        GET  /api/collections/cases[?bucket=&status=&agent=]
+#                                           GET  /api/collections/cases/{id}
+#   assign / promise / escalate / resolve:  POST /api/collections/cases/{id}/{assign|promise|escalate|resolve}
+#   two-person write-off (distinct admins): POST /api/loans/{id}/write-off-requests {"reason":".."}
+#                                           POST /api/write-off-requests/{id}/approve   (X-Acting-User != requester)
+#                                           POST /api/write-off-requests/{id}/reject
+#   notification log:                       GET  /api/notifications/log[?status=QUEUED|SENT|FAILED|SUPPRESSED]
+#   reconciliation:                         POST /api/admin/recon/run?date=YYYY-MM-DD
+#                                           GET  /api/recon/runs ; GET /api/recon/runs/{id}/items
+#                                           POST /api/recon/items/{id}/resolve {"note":".."}
+#                                           POST /api/recon/items/{id}/adjust {"journalEntryId":"..","reason":".."}
+# Seed/drive the recon simulator feeds + drift knob:
+#   POST /sim/recon/lines {"reference":"UTR-..","amountMinor":..,"date":"YYYY-MM-DD","source":"BANK|RAIL"}
+#   POST /sim/recon/drift?enabled=true|false ; POST /sim/recon/reset
+# Channel failure per channel (admin): PUT /api/sim/config/{sms|email|push|whatsapp} (failureRate, latency).
+```
+
+Debugging collections, notifications and reconciliation:
+- A case not advancing → dunning advances on `loan.dpd-updated` **ticks**, not time; confirm the
+  daily DPD job published a tick (loan.events) and open the Temporal-UI workflow `dun-{loanId}`. A
+  replayed tick never repeats an action (unique `(caseId, stepId)` in `dunning_actions`).
+- A reminder paused → there is an open promise-to-pay; it resumes automatically on the first tick on
+  or after the promised business date while still overdue.
+- A write-off refused → either the same admin tried to approve their own request (409, two-person
+  rule) or DPD < the configured minimum (180); the request stays REQUESTED.
+- A notification missing → check `/api/notifications/log`: SUPPRESSED (consent), QUEUED with a
+  `release_at` (quiet hours — released by the morning job), or FAILED after the retry budget. Dedup
+  is on `(trigger_event_id, template_id, channel)`, so a replayed event adds no row.
+- A reconciliation discrepancy → `GET /api/recon/runs/{id}/items`; resolve with a note or raise an
+  adjusting entry via the reversal mechanism (`/api/recon/items/{id}/adjust`). The trial balance
+  must still be zero afterwards.

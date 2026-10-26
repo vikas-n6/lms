@@ -120,3 +120,37 @@ real stack and settle the container-only items.
 - [ ] Admin UI Phase 3 pages (disbursement monitor, repayments, mandates, manual-collection dialog,
       simulator rail/mandate/payments controls) — authored under `-Pui`; OIDC login verified in Docker.
 - [ ] Tag `phase-3-done` once the Docker-session items above pass (mirrors the Phase 0/1/2 discipline).
+
+## Phase 4 (collections and operations) — deferred and known gaps
+
+- [ ] Docker session: run `scripts/e2e/phase4.sh` (3 loans over 12 months, daily jobs in order; A
+      on-time never opens a case; B opens at DPD 1, runs DPD 1/3/7, then resolves; C → NPA →
+      two-person write-off), with the `workflow` (Temporal) profile up for `collections`.
+- [ ] Docker session: **dunning crash test** — kill `collections` mid-workflow, restart, deliver the
+      next DPD tick, and confirm no dunning action is repeated (`(caseId, stepId)` guard).
+- [ ] Docker session: Temporal dev-server run for the `collections` worker (second embedded Temporal
+      service; virtual-thread options per ADR 0008/0011).
+- [ ] Docker session: notification acceptance — replay sends no second message; a 22:00 message is
+      QUEUED then released by the morning job; a channel with failureRate=1 retries and ends FAILED
+      after `lms.notification.max-attempts`; consent-withheld → SUPPRESSED.
+- [ ] Docker session: reconciliation — seed the simulator feeds to mirror the ledger's money
+      movements; a clean day is all MATCHED; with `reconDriftRate`/drift on, each of
+      MISSING_IN_LEDGER / MISSING_IN_BANK / AMOUNT_MISMATCH / DUPLICATE is detected exactly once.
+- [ ] Schema Registry BACKWARD check for the Phase 4 events (loan.penal-accrued, loan.dpd-updated,
+      loan.installment-due-soon, loan.written-off, collections.*, notification.*) and the additive
+      `ledger.recon-completed` fields (reconType + counts, defaulted).
+- [ ] Outbox→Kafka relay wiring for `collections` and `notification` (same deferral as the other
+      services); the live inbox-idempotent consumption of the loan/repayment/collections events.
+- [ ] Consent is permissive (`PermissiveConsentPolicy`); wire a consent cache fed by
+      `customer.events` (or a gateway call) so a withheld channel yields SUPPRESSED for real.
+- [ ] Notification backoff is a plain sleep; move channel retries behind Resilience4j (retry +
+      circuit breaker + bulkhead) like the other outbound calls, with config-driven parameters.
+- [ ] Reconciliation reconciles the money-movement entries by their external reference (ADR 0012
+      simplification), not every account-1001 posting line; revisit if a future product needs the
+      full 1001 line-level match or additional accounts.
+- [ ] k6: a Phase 4 load check (e.g. daily-job throughput / dunning tick fan-out) under
+      `scripts/k6/` — not yet authored.
+- [ ] Admin UI Phase 4 pages (collections queue + case detail, write-off requests, notification log,
+      reconciliation results) — authored and type-checked under `-Pui`; OIDC login + live data
+      verified in Docker.
+- [ ] Tag `phase-4-done` once the Docker-session items above pass (mirrors the Phase 0–3 discipline).
