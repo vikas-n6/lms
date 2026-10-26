@@ -19,6 +19,8 @@ import org.springframework.stereotype.Repository;
 public class JdbcAccrualRepository implements AccrualRepository {
 
     private static final String INTEREST = "INTEREST";
+    private static final String PENAL = "PENAL";
+    private static final String DUE_SOON = "DUE_SOON";
 
     private final JdbcClient jdbc;
 
@@ -29,6 +31,40 @@ public class JdbcAccrualRepository implements AccrualRepository {
     @Override
     public boolean recordInterestAccrual(
             UUID loanId, LocalDate businessDate, int instalmentNumber, Money amount) {
+        return insert(
+                loanId,
+                businessDate,
+                INTEREST,
+                instalmentNumber,
+                amount.currency().getCurrencyCode(),
+                amount.minorUnits());
+    }
+
+    @Override
+    public boolean recordPenalAccrual(
+            UUID loanId, LocalDate businessDate, int instalmentNumber, Money amount) {
+        return insert(
+                loanId,
+                businessDate,
+                PENAL,
+                instalmentNumber,
+                amount.currency().getCurrencyCode(),
+                amount.minorUnits());
+    }
+
+    @Override
+    public boolean recordDueSoonSent(UUID loanId, LocalDate businessDate, int instalmentNumber) {
+        // No money is accrued; the row only marks that the reminder was sent on this business date.
+        return insert(loanId, businessDate, DUE_SOON, instalmentNumber, "XXX", 0L);
+    }
+
+    private boolean insert(
+            UUID loanId,
+            LocalDate businessDate,
+            String kind,
+            int instalmentNumber,
+            String currency,
+            long amountMinor) {
         try {
             jdbc.sql(
                             """
@@ -38,24 +74,33 @@ public class JdbcAccrualRepository implements AccrualRepository {
                             """)
                     .param("loanId", loanId)
                     .param("date", businessDate)
-                    .param("kind", INTEREST)
+                    .param("kind", kind)
                     .param("n", instalmentNumber)
-                    .param("currency", amount.currency().getCurrencyCode())
-                    .param("amount", amount.minorUnits())
+                    .param("currency", currency)
+                    .param("amount", amountMinor)
                     .update();
             return true;
         } catch (DuplicateKeyException duplicate) {
-            return false; // already accrued for this (loanId, businessDate): idempotent
+            return false; // already recorded for this (loanId, businessDate, kind): idempotent
         }
     }
 
     @Override
     public Money totalInterestAccrued(UUID loanId) {
+        return total(loanId, INTEREST);
+    }
+
+    @Override
+    public Money totalPenalAccrued(UUID loanId) {
+        return total(loanId, PENAL);
+    }
+
+    private Money total(UUID loanId, String kind) {
         String currency =
                 jdbc.sql(
                                 "select currency from accruals where loan_id = :loanId and kind = :kind limit 1")
                         .param("loanId", loanId)
-                        .param("kind", INTEREST)
+                        .param("kind", kind)
                         .query(String.class)
                         .optional()
                         .orElse("INR");
@@ -63,7 +108,7 @@ public class JdbcAccrualRepository implements AccrualRepository {
                 jdbc.sql(
                                 "select coalesce(sum(amount_minor), 0) from accruals where loan_id = :loanId and kind = :kind")
                         .param("loanId", loanId)
-                        .param("kind", INTEREST)
+                        .param("kind", kind)
                         .query(Long.class)
                         .single();
         return Money.of(total, Currency.getInstance(currency));

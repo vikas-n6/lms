@@ -7,11 +7,16 @@ import com.lms.loanaccount.application.ActivateLoanService;
 import com.lms.loanaccount.application.AllocateRepaymentService;
 import com.lms.loanaccount.application.CancelLoanService;
 import com.lms.loanaccount.application.CreateLoanService;
+import com.lms.loanaccount.application.DailyLoanJobs;
+import com.lms.loanaccount.application.DpdService;
+import com.lms.loanaccount.application.DueSoonService;
 import com.lms.loanaccount.application.ForecloseLoanService;
 import com.lms.loanaccount.application.LoanQueryService;
+import com.lms.loanaccount.application.PenalAccrualService;
 import com.lms.loanaccount.application.ReverseAllocationService;
 import com.lms.loanaccount.application.port.out.AccrualRepository;
 import com.lms.loanaccount.application.port.out.AllocationRepository;
+import com.lms.loanaccount.application.port.out.DpdSnapshotRepository;
 import com.lms.loanaccount.application.port.out.LoanEventPublisher;
 import com.lms.loanaccount.application.port.out.LoanRepository;
 import com.lms.loanaccount.application.port.out.ProductCatalog;
@@ -149,6 +154,47 @@ public class LoanAccountConfig {
             AccrualRepository accruals,
             LoanEventPublisher publisher) {
         return new AccrueInterestService(loans, schedules, accruals, publisher);
+    }
+
+    @Bean
+    public PenalAccrualService penalAccrualService(
+            LoanRepository loans,
+            ScheduleRepository schedules,
+            AccrualRepository accruals,
+            ProductCatalog products,
+            LoanEventPublisher publisher) {
+        return new PenalAccrualService(loans, schedules, accruals, products, publisher);
+    }
+
+    @Bean
+    public DpdService dpdService(
+            LoanRepository loans,
+            ScheduleRepository schedules,
+            DpdSnapshotRepository snapshots,
+            StateHistoryRepository history,
+            ProductCatalog products,
+            LoanEventPublisher publisher,
+            Clock clock) {
+        return new DpdService(loans, schedules, snapshots, history, products, publisher, clock);
+    }
+
+    @Bean
+    public DueSoonService dueSoonService(
+            LoanRepository loans,
+            ScheduleRepository schedules,
+            AccrualRepository accruals,
+            LoanEventPublisher publisher,
+            @Value("${lms.jobs.pre-due-days:3}") int preDueDays) {
+        return new DueSoonService(loans, schedules, accruals, publisher, preDueDays);
+    }
+
+    @Bean
+    public DailyLoanJobs dailyLoanJobs(
+            AccrueInterestService interest,
+            PenalAccrualService penal,
+            DpdService dpd,
+            DueSoonService dueSoon) {
+        return new DailyLoanJobs(interest, penal, dpd, dueSoon);
     }
 
     @Bean

@@ -19,6 +19,23 @@ public interface AccrualRepository {
     boolean recordInterestAccrual(
             UUID loanId, LocalDate businessDate, int instalmentNumber, Money amount);
 
+    /**
+     * Record one day's penal accrual, idempotent per {@code (loanId, businessDate)} for {@code
+     * kind=PENAL}. Returns {@code true} if inserted, {@code false} if already accrued that day.
+     */
+    boolean recordPenalAccrual(
+            UUID loanId, LocalDate businessDate, int instalmentNumber, Money amount);
+
+    /**
+     * Record that an instalment's pre-due reminder was sent, idempotent per {@code (loanId,
+     * businessDate)} for {@code kind=DUE_SOON}. Returns {@code true} if inserted (first time that
+     * business date), {@code false} if already sent, so a re-run publishes no second reminder.
+     */
+    boolean recordDueSoonSent(UUID loanId, LocalDate businessDate, int instalmentNumber);
+
     /** Total interest accrued over the life of the loan so far. */
     Money totalInterestAccrued(UUID loanId);
+
+    /** Total penal accrued over the life of the loan so far. */
+    Money totalPenalAccrued(UUID loanId);
 }

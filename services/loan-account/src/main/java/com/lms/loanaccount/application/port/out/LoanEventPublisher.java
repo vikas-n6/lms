@@ -1,6 +1,7 @@
 package com.lms.loanaccount.application.port.out;
 
 import com.lms.loanaccount.domain.AllocationResult;
+import com.lms.loanaccount.domain.DelinquencySnapshot;
 import com.lms.loanaccount.domain.Loan;
 import com.lms.money.Money;
 import java.time.LocalDate;
@@ -24,6 +25,41 @@ public interface LoanEventPublisher {
             LocalDate businessDate,
             int instalmentNumber,
             Money amount);
+
+    /** One day's penal interest recognised on the overdue base (phase prompt task 1). */
+    void penalAccrued(
+            UUID loanId,
+            String loanNumber,
+            LocalDate businessDate,
+            Money amount,
+            Money overdueBase);
+
+    /**
+     * The daily DPD position (phase prompt task 1): published for every loan with DPD above zero,
+     * plus once when it returns to zero.
+     */
+    void dpdUpdated(
+            UUID loanId, String loanNumber, LocalDate businessDate, DelinquencySnapshot snapshot);
+
+    /** An instalment falls due within the pre-due window (phase prompt task 1). */
+    void installmentDueSoon(
+            UUID loanId,
+            String loanNumber,
+            int instalmentNumber,
+            LocalDate dueDate,
+            Money amountDue);
+
+    /** A loan written off after two-person approval (phase prompt task 2). */
+    void writtenOff(
+            Loan loan,
+            String requestId,
+            Money principal,
+            Money interest,
+            Money penal,
+            String reason,
+            String requestedBy,
+            String approvedBy,
+            UUID causationEventId);
 
     void repaymentAllocated(
             UUID loanId,

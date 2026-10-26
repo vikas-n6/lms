@@ -2,6 +2,7 @@ package com.lms.loanaccount.application;
 
 import com.lms.loanaccount.application.port.out.AccrualRepository;
 import com.lms.loanaccount.application.port.out.AllocationRepository;
+import com.lms.loanaccount.application.port.out.DpdSnapshotRepository;
 import com.lms.loanaccount.application.port.out.LoanEventPublisher;
 import com.lms.loanaccount.application.port.out.LoanRepository;
 import com.lms.loanaccount.application.port.out.ProductCatalog;
@@ -9,6 +10,7 @@ import com.lms.loanaccount.application.port.out.ScheduleRepository;
 import com.lms.loanaccount.application.port.out.StateHistoryRepository;
 import com.lms.loanaccount.domain.Allocation;
 import com.lms.loanaccount.domain.AllocationResult;
+import com.lms.loanaccount.domain.DpdSnapshot;
 import com.lms.loanaccount.domain.Loan;
 import com.lms.loanaccount.domain.LoanScheduleLine;
 import com.lms.loanaccount.domain.LoanState;
@@ -178,14 +180,12 @@ final class LoanAccountFakes {
     }
 
     static final class FakeAccrualRepository implements AccrualRepository {
-        private record Key(UUID loanId, LocalDate date) {}
+        private record Key(UUID loanId, LocalDate date, String kind) {}
 
         final Map<Key, Money> accruals = new LinkedHashMap<>();
 
-        @Override
-        public boolean recordInterestAccrual(
-                UUID loanId, LocalDate businessDate, int instalmentNumber, Money amount) {
-            Key key = new Key(loanId, businessDate);
+        private boolean record(UUID loanId, LocalDate date, String kind, Money amount) {
+            Key key = new Key(loanId, date, kind);
             if (accruals.containsKey(key)) {
                 return false;
             }
@@ -194,11 +194,55 @@ final class LoanAccountFakes {
         }
 
         @Override
+        public boolean recordInterestAccrual(
+                UUID loanId, LocalDate businessDate, int instalmentNumber, Money amount) {
+            return record(loanId, businessDate, "INTEREST", amount);
+        }
+
+        @Override
+        public boolean recordPenalAccrual(
+                UUID loanId, LocalDate businessDate, int instalmentNumber, Money amount) {
+            return record(loanId, businessDate, "PENAL", amount);
+        }
+
+        @Override
+        public boolean recordDueSoonSent(
+                UUID loanId, LocalDate businessDate, int instalmentNumber) {
+            return record(loanId, businessDate, "DUE_SOON", Money.zero(INR));
+        }
+
+        @Override
         public Money totalInterestAccrued(UUID loanId) {
+            return total(loanId, "INTEREST");
+        }
+
+        @Override
+        public Money totalPenalAccrued(UUID loanId) {
+            return total(loanId, "PENAL");
+        }
+
+        private Money total(UUID loanId, String kind) {
             return accruals.entrySet().stream()
-                    .filter(e -> e.getKey().loanId().equals(loanId))
+                    .filter(
+                            e ->
+                                    e.getKey().loanId().equals(loanId)
+                                            && e.getKey().kind().equals(kind))
                     .map(Map.Entry::getValue)
                     .reduce(Money.zero(INR), Money::add);
+        }
+    }
+
+    static final class FakeDpdSnapshotRepository implements DpdSnapshotRepository {
+        final Map<UUID, DpdSnapshot> byLoan = new LinkedHashMap<>();
+
+        @Override
+        public Optional<DpdSnapshot> find(UUID loanId) {
+            return Optional.ofNullable(byLoan.get(loanId));
+        }
+
+        @Override
+        public void upsert(DpdSnapshot snapshot) {
+            byLoan.put(snapshot.loanId(), snapshot);
         }
     }
 
@@ -255,6 +299,49 @@ final class LoanAccountFakes {
                 int instalmentNumber,
                 Money amount) {
             events.add("loan.interest-accrued:" + businessDate + ":" + amount.minorUnits());
+        }
+
+        @Override
+        public void penalAccrued(
+                UUID loanId,
+                String loanNumber,
+                LocalDate businessDate,
+                Money amount,
+                Money overdueBase) {
+            events.add("loan.penal-accrued:" + businessDate + ":" + amount.minorUnits());
+        }
+
+        @Override
+        public void dpdUpdated(
+                UUID loanId,
+                String loanNumber,
+                LocalDate businessDate,
+                com.lms.loanaccount.domain.DelinquencySnapshot snapshot) {
+            events.add("loan.dpd-updated:" + businessDate + ":" + snapshot.daysPastDue());
+        }
+
+        @Override
+        public void installmentDueSoon(
+                UUID loanId,
+                String loanNumber,
+                int instalmentNumber,
+                LocalDate dueDate,
+                Money amountDue) {
+            events.add("loan.installment-due-soon:" + dueDate + ":" + instalmentNumber);
+        }
+
+        @Override
+        public void writtenOff(
+                Loan loan,
+                String requestId,
+                Money principal,
+                Money interest,
+                Money penal,
+                String reason,
+                String requestedBy,
+                String approvedBy,
+                UUID causationEventId) {
+            events.add("loan.written-off:" + loan.loanNumber() + ":" + requestId);
         }
 
         @Override

@@ -213,7 +213,8 @@ class Phase4EventsSerdeTest {
 
     @Test
     void ledgerReconCompletedDefaultsTrialBalanceFields() {
-        // Historical TRIAL_BALANCE publish: the new fields default, so it stays BACKWARD-compatible.
+        // Historical TRIAL_BALANCE publish: the new fields default, so it stays
+        // BACKWARD-compatible.
         LedgerReconCompleted trial =
                 LedgerReconCompleted.newBuilder()
                         .setMetadata(meta("ledger.recon-completed", "reconRun", "run-1"))

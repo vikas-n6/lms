@@ -5,16 +5,21 @@ import com.lms.contracts.loan.LoanActivated;
 import com.lms.contracts.loan.LoanCancelled;
 import com.lms.contracts.loan.LoanClosed;
 import com.lms.contracts.loan.LoanCreated;
+import com.lms.contracts.loan.LoanDpdUpdated;
 import com.lms.contracts.loan.LoanForeclosed;
+import com.lms.contracts.loan.LoanInstallmentDueSoon;
 import com.lms.contracts.loan.LoanInterestAccrued;
+import com.lms.contracts.loan.LoanPenalAccrued;
 import com.lms.contracts.loan.LoanRepaymentAllocated;
 import com.lms.contracts.loan.LoanRepaymentReversed;
+import com.lms.contracts.loan.LoanWrittenOff;
 import com.lms.events.EventHeaders;
 import com.lms.events.EventMeta;
 import com.lms.events.EventMetadataMapper;
 import com.lms.events.Uuid7;
 import com.lms.loanaccount.application.port.out.LoanEventPublisher;
 import com.lms.loanaccount.domain.AllocationResult;
+import com.lms.loanaccount.domain.DelinquencySnapshot;
 import com.lms.loanaccount.domain.Loan;
 import com.lms.money.Money;
 import com.lms.outbox.OutboxRecord;
@@ -114,6 +119,104 @@ public class OutboxLoanEventPublisher implements LoanEventPublisher {
                         .setAccruedAt(clock.instant())
                         .build();
         append(meta, id, event);
+    }
+
+    @Override
+    public void penalAccrued(
+            UUID loanId,
+            String loanNumber,
+            LocalDate businessDate,
+            Money amount,
+            Money overdueBase) {
+        String id = loanId.toString();
+        EventMeta meta = meta("loan.penal-accrued", id, null);
+        LoanPenalAccrued event =
+                LoanPenalAccrued.newBuilder()
+                        .setMetadata(EventMetadataMapper.toAvro(meta))
+                        .setLoanId(id)
+                        .setBusinessDate(businessDate)
+                        .setAmount(money(amount))
+                        .setOverdueBase(money(overdueBase))
+                        .setAccruedAt(clock.instant())
+                        .build();
+        append(meta, id, event);
+    }
+
+    @Override
+    public void dpdUpdated(
+            UUID loanId, String loanNumber, LocalDate businessDate, DelinquencySnapshot snapshot) {
+        String id = loanId.toString();
+        EventMeta meta = meta("loan.dpd-updated", id, null);
+        LoanDpdUpdated event =
+                LoanDpdUpdated.newBuilder()
+                        .setMetadata(EventMetadataMapper.toAvro(meta))
+                        .setLoanId(id)
+                        .setLoanNumber(loanNumber)
+                        .setBusinessDate(businessDate)
+                        .setDaysPastDue(snapshot.daysPastDue())
+                        .setBucket(snapshot.bucket().name())
+                        .setOverduePrincipal(money(snapshot.overduePrincipal()))
+                        .setOverdueInterest(money(snapshot.overdueInterest()))
+                        .setOverduePenal(money(snapshot.overduePenal()))
+                        .setOverdueTotal(money(snapshot.overdueTotal()))
+                        .setNpa(snapshot.isNpa())
+                        .setUpdatedAt(clock.instant())
+                        .build();
+        append(meta, id, event);
+    }
+
+    @Override
+    public void installmentDueSoon(
+            UUID loanId,
+            String loanNumber,
+            int instalmentNumber,
+            LocalDate dueDate,
+            Money amountDue) {
+        String id = loanId.toString();
+        EventMeta meta = meta("loan.installment-due-soon", id, null);
+        LoanInstallmentDueSoon event =
+                LoanInstallmentDueSoon.newBuilder()
+                        .setMetadata(EventMetadataMapper.toAvro(meta))
+                        .setLoanId(id)
+                        .setLoanNumber(loanNumber)
+                        .setInstalmentNumber(instalmentNumber)
+                        .setDueDate(dueDate)
+                        .setAmountDue(money(amountDue))
+                        .setNotifiedAt(clock.instant())
+                        .build();
+        append(meta, id, event);
+    }
+
+    @Override
+    public void writtenOff(
+            Loan loan,
+            String requestId,
+            Money principal,
+            Money interest,
+            Money penal,
+            String reason,
+            String requestedBy,
+            String approvedBy,
+            UUID causationEventId) {
+        String loanId = loan.id().toString();
+        EventMeta meta = meta("loan.written-off", loanId, causationEventId);
+        Money total = principal.add(interest).add(penal);
+        LoanWrittenOff event =
+                LoanWrittenOff.newBuilder()
+                        .setMetadata(EventMetadataMapper.toAvro(meta))
+                        .setLoanId(loanId)
+                        .setLoanNumber(loan.loanNumber())
+                        .setRequestId(requestId)
+                        .setPrincipal(money(principal))
+                        .setInterest(money(interest))
+                        .setPenal(money(penal))
+                        .setTotal(money(total))
+                        .setReason(reason)
+                        .setRequestedBy(requestedBy)
+                        .setApprovedBy(approvedBy)
+                        .setWrittenOffAt(clock.instant())
+                        .build();
+        append(meta, loanId, event);
     }
 
     @Override
