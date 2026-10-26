@@ -86,8 +86,79 @@ class PostingTemplateTest {
         assertThat(registry.handles("repayment.reversed")).isTrue();
         assertThat(registry.handles("loan.repayment-reversed")).isTrue();
         assertThat(registry.handles("repayment.refunded")).isTrue();
-        // Penal/write-off arrive in Phase 4.
-        assertThat(registry.handles("loan.written-off")).isFalse();
+        // Phase 4 penal/write-off templates.
+        assertThat(registry.handles("loan.penal-accrued")).isTrue();
+        assertThat(registry.handles("loan.written-off")).isTrue();
+    }
+
+    @Test
+    void penalAccruedDebitsPenalReceivableCreditsPenalIncome() {
+        var postings =
+                registry.find("loan.penal-accrued")
+                        .orElseThrow()
+                        .build(
+                                new PostingInput(
+                                        "loan-1", "cust-1", INR, Map.of("penal", inr(329))));
+        Posting debit =
+                postings.stream()
+                        .filter(p -> p.side() == PostingSide.DEBIT)
+                        .findFirst()
+                        .orElseThrow();
+        Posting credit =
+                postings.stream()
+                        .filter(p -> p.side() == PostingSide.CREDIT)
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(debit.account()).isEqualTo(AccountCode.PENAL_RECEIVABLE);
+        assertThat(credit.account()).isEqualTo(AccountCode.PENAL_INCOME);
+        assertThat(debit.amount()).isEqualTo(inr(329));
+    }
+
+    @Test
+    void writeOffBalancesAndBadDebtTakesPrincipalWhileIncomeIsReversed() {
+        Map<String, Money> amounts =
+                Map.of(
+                        "principal", inr(3_000_000),
+                        "interest", inr(200_000),
+                        "penal", inr(50_000));
+        long total = 3_000_000L + 200_000L + 50_000L;
+        assertThat(debitsFor("loan.written-off", amounts)).isEqualTo(total);
+        assertThat(creditsFor("loan.written-off", amounts)).isEqualTo(total);
+
+        var postings =
+                registry.find("loan.written-off")
+                        .orElseThrow()
+                        .build(new PostingInput("loan-1", "cust-1", INR, amounts));
+        // Bad debt expense (5001) is debited the principal; interest/penal income reversed.
+        Posting badDebt =
+                postings.stream()
+                        .filter(p -> p.account() == AccountCode.BAD_DEBT_WRITTEN_OFF)
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(badDebt.side()).isEqualTo(PostingSide.DEBIT);
+        assertThat(badDebt.amount()).isEqualTo(inr(3_000_000));
+        assertThat(postings)
+                .anyMatch(
+                        p ->
+                                p.account() == AccountCode.INTEREST_INCOME
+                                        && p.side() == PostingSide.DEBIT)
+                .anyMatch(
+                        p ->
+                                p.account() == AccountCode.LOAN_PRINCIPAL_RECEIVABLE
+                                        && p.side() == PostingSide.CREDIT);
+    }
+
+    @Test
+    void writeOffOmitsZeroComponents() {
+        Map<String, Money> amounts =
+                Map.of("principal", inr(3_000_000), "interest", inr(0), "penal", inr(0));
+        var postings =
+                registry.find("loan.written-off")
+                        .orElseThrow()
+                        .build(new PostingInput("loan-1", "cust-1", INR, amounts));
+        // Only DR 5001 / CR 1100 remain.
+        assertThat(postings).hasSize(2);
+        assertThat(debitsFor("loan.written-off", amounts)).isEqualTo(3_000_000L);
     }
 
     private long creditsFor(String eventType, Map<String, Money> amounts) {

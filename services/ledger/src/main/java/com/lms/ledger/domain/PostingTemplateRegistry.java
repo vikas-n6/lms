@@ -2,7 +2,9 @@ package com.lms.ledger.domain;
 
 import com.lms.ledger.domain.templates.DisbursementTemplates;
 import com.lms.ledger.domain.templates.InterestAccruedTemplate;
+import com.lms.ledger.domain.templates.PenalAccruedTemplate;
 import com.lms.ledger.domain.templates.RepaymentTemplates;
+import com.lms.ledger.domain.templates.WriteOffTemplate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,9 @@ public final class PostingTemplateRegistry {
                         new RepaymentTemplates.Allocated(),
                         new RepaymentTemplates.Reversed(),
                         new RepaymentTemplates.AllocationReversed(),
-                        new RepaymentTemplates.OverpaymentRefund()));
+                        new RepaymentTemplates.OverpaymentRefund(),
+                        new PenalAccruedTemplate(),
+                        new WriteOffTemplate()));
     }
 
     public Optional<PostingTemplate> find(String eventType) {

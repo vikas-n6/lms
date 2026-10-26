@@ -2,8 +2,10 @@ package com.lms.ledger.adapters.in.kafka;
 
 import com.lms.contracts.events.MoneyAmount;
 import com.lms.contracts.loan.LoanInterestAccrued;
+import com.lms.contracts.loan.LoanPenalAccrued;
 import com.lms.contracts.loan.LoanRepaymentAllocated;
 import com.lms.contracts.loan.LoanRepaymentReversed;
+import com.lms.contracts.loan.LoanWrittenOff;
 import com.lms.ledger.application.PostEntryService;
 import com.lms.ledger.application.PostingRequest;
 import com.lms.money.Money;
@@ -70,6 +72,23 @@ public class LoanLedgerListener {
                             "penal", money(event.getPenal()),
                             "interest", money(event.getInterest()),
                             "principal", money(event.getPrincipal())));
+        } else if (payload instanceof LoanPenalAccrued event) {
+            post(
+                    event.getMetadata().getEventId(),
+                    "loan.penal-accrued",
+                    event.getLoanId(),
+                    currency(event.getAmount()),
+                    Map.of("penal", money(event.getAmount())));
+        } else if (payload instanceof LoanWrittenOff event) {
+            post(
+                    event.getMetadata().getEventId(),
+                    "loan.written-off",
+                    event.getLoanId(),
+                    currency(event.getTotal()),
+                    Map.of(
+                            "principal", money(event.getPrincipal()),
+                            "interest", money(event.getInterest()),
+                            "penal", money(event.getPenal())));
         }
     }
 

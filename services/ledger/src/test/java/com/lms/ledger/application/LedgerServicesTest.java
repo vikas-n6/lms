@@ -77,7 +77,7 @@ class LedgerServicesTest {
         var result =
                 postService.post(
                         new PostingRequest(
-                                "loan.written-off", // penal/write-off templates arrive in Phase 4
+                                "loan.unknown-event", // no template is registered for this type
                                 UUID.randomUUID(),
                                 "loan-1",
                                 "cust-1",
