@@ -8,12 +8,14 @@ import com.lms.loanaccount.application.port.out.LoanRepository;
 import com.lms.loanaccount.application.port.out.ProductCatalog;
 import com.lms.loanaccount.application.port.out.ScheduleRepository;
 import com.lms.loanaccount.application.port.out.StateHistoryRepository;
+import com.lms.loanaccount.application.port.out.WriteOffRequestRepository;
 import com.lms.loanaccount.domain.Allocation;
 import com.lms.loanaccount.domain.AllocationResult;
 import com.lms.loanaccount.domain.DpdSnapshot;
 import com.lms.loanaccount.domain.Loan;
 import com.lms.loanaccount.domain.LoanScheduleLine;
 import com.lms.loanaccount.domain.LoanState;
+import com.lms.loanaccount.domain.WriteOffRequest;
 import com.lms.money.Money;
 import com.lms.money.Rate;
 import com.lms.schedule.FixedTenorReducingBalanceProduct;
@@ -243,6 +245,37 @@ final class LoanAccountFakes {
         @Override
         public void upsert(DpdSnapshot snapshot) {
             byLoan.put(snapshot.loanId(), snapshot);
+        }
+    }
+
+    static final class FakeWriteOffRequestRepository implements WriteOffRequestRepository {
+        final Map<UUID, WriteOffRequest> byId = new LinkedHashMap<>();
+
+        @Override
+        public void insert(WriteOffRequest request) {
+            byId.put(request.id(), request);
+        }
+
+        @Override
+        public void update(WriteOffRequest request) {
+            byId.put(request.id(), request);
+        }
+
+        @Override
+        public Optional<WriteOffRequest> findById(UUID id) {
+            return Optional.ofNullable(byId.get(id));
+        }
+
+        @Override
+        public List<WriteOffRequest> findByLoanId(UUID loanId) {
+            return byId.values().stream().filter(r -> r.loanId().equals(loanId)).toList();
+        }
+
+        @Override
+        public List<WriteOffRequest> findAll(Optional<String> status) {
+            return byId.values().stream()
+                    .filter(r -> status.map(s -> r.status().name().equals(s)).orElse(true))
+                    .toList();
         }
     }
 

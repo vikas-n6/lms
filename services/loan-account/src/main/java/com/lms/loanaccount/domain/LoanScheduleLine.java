@@ -121,6 +121,26 @@ public record LoanScheduleLine(
                 provisional);
     }
 
+    /**
+     * A copy with all outstanding components settled, used when the loan is written off (phase
+     * prompt task 2): the receivables go to zero because the balance is no longer collectable. The
+     * amounts are removed from the loan's receivables; the ledger records the bad-debt expense
+     * (docs/domain-rules.md "Posting templates" write-off).
+     */
+    public LoanScheduleLine writeOff() {
+        return new LoanScheduleLine(
+                loanId,
+                instalmentNumber,
+                dueDate,
+                principal,
+                interest,
+                principal,
+                interest,
+                penalAccrued,
+                penalAccrued,
+                provisional);
+    }
+
     /** A copy with more penal accrued on this instalment. */
     public LoanScheduleLine accruePenal(Money amount) {
         return new LoanScheduleLine(

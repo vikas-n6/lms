@@ -3,6 +3,9 @@ package com.lms.loanaccount.adapters.in.web;
 import com.lms.loanaccount.adapters.out.persistence.OptimisticLockingException;
 import com.lms.loanaccount.application.LoanNotFoundException;
 import com.lms.loanaccount.application.LoanTransitionRejectedException;
+import com.lms.loanaccount.application.WriteOffNotAllowedException;
+import com.lms.loanaccount.application.WriteOffRequestNotFoundException;
+import com.lms.loanaccount.domain.WriteOffRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,6 +35,30 @@ public class LoanExceptionHandler {
     public ProblemDetail onConflict(OptimisticLockingException e) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
         problem.setTitle("Concurrent modification");
+        problem.setDetail(e.getMessage());
+        return problem;
+    }
+
+    @ExceptionHandler(WriteOffRequestNotFoundException.class)
+    public ProblemDetail onWriteOffNotFound(WriteOffRequestNotFoundException e) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle("Write-off request not found");
+        problem.setDetail(e.getMessage());
+        return problem;
+    }
+
+    @ExceptionHandler(WriteOffNotAllowedException.class)
+    public ProblemDetail onWriteOffNotAllowed(WriteOffNotAllowedException e) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problem.setTitle("Write-off not allowed");
+        problem.setDetail(e.getMessage());
+        return problem;
+    }
+
+    @ExceptionHandler(WriteOffRequest.SelfApprovalException.class)
+    public ProblemDetail onSelfApproval(WriteOffRequest.SelfApprovalException e) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problem.setTitle("Two-person rule violated");
         problem.setDetail(e.getMessage());
         return problem;
     }

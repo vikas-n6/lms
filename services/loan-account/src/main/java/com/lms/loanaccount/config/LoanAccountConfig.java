@@ -14,6 +14,7 @@ import com.lms.loanaccount.application.ForecloseLoanService;
 import com.lms.loanaccount.application.LoanQueryService;
 import com.lms.loanaccount.application.PenalAccrualService;
 import com.lms.loanaccount.application.ReverseAllocationService;
+import com.lms.loanaccount.application.WriteOffService;
 import com.lms.loanaccount.application.port.out.AccrualRepository;
 import com.lms.loanaccount.application.port.out.AllocationRepository;
 import com.lms.loanaccount.application.port.out.DpdSnapshotRepository;
@@ -22,6 +23,7 @@ import com.lms.loanaccount.application.port.out.LoanRepository;
 import com.lms.loanaccount.application.port.out.ProductCatalog;
 import com.lms.loanaccount.application.port.out.ScheduleRepository;
 import com.lms.loanaccount.application.port.out.StateHistoryRepository;
+import com.lms.loanaccount.application.port.out.WriteOffRequestRepository;
 import com.lms.outbox.OutboxRepository;
 import com.lms.outbox.inbox.IdempotentConsumer;
 import com.lms.outbox.inbox.InboxStore;
@@ -186,6 +188,21 @@ public class LoanAccountConfig {
             LoanEventPublisher publisher,
             @Value("${lms.jobs.pre-due-days:3}") int preDueDays) {
         return new DueSoonService(loans, schedules, accruals, publisher, preDueDays);
+    }
+
+    @Bean
+    public WriteOffService writeOffService(
+            LoanRepository loans,
+            ScheduleRepository schedules,
+            WriteOffRequestRepository requests,
+            StateHistoryRepository history,
+            ProductCatalog products,
+            LoanEventPublisher publisher,
+            BusinessCalendar calendar,
+            Clock clock,
+            @Value("${lms.write-off.min-dpd:180}") int minDpd) {
+        return new WriteOffService(
+                loans, schedules, requests, history, products, publisher, calendar, clock, minDpd);
     }
 
     @Bean
