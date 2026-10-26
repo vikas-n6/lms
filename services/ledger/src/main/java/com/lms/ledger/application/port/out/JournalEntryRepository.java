@@ -1,6 +1,7 @@
 package com.lms.ledger.application.port.out;
 
 import com.lms.ledger.domain.JournalEntry;
+import com.lms.ledger.domain.recon.ReconLine;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -32,4 +33,11 @@ public interface JournalEntryRepository {
 
     /** All entries, for the full trial balance and the reconciliation job. */
     List<JournalEntry> findAll();
+
+    /**
+     * Money-movement lines for the bank/rail reconciliation on {@code date} (phase prompt task 6):
+     * the entries carrying an external (UTR / provider) reference and the amount that moved on the
+     * operating account, so they can be matched against the bank statement and rail report.
+     */
+    List<ReconLine> reconLines(LocalDate date);
 }

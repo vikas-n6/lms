@@ -37,36 +37,40 @@ public class RepaymentLedgerListener {
     @Transactional
     public void onMessage(Object payload) {
         if (payload instanceof RepaymentReceived event) {
+            // The received money lands on the operating account with the rail reference, so the
+            // entry is tagged for the bank/rail reconciliation (phase prompt task 6).
             post(
                     event.getMetadata().getEventId(),
                     "repayment.received",
                     event.getLoanId(),
-                    event.getAmount());
+                    event.getAmount(),
+                    event.getRailReference());
         } else if (payload instanceof RepaymentReversed event) {
             post(
                     event.getMetadata().getEventId(),
                     "repayment.reversed",
                     event.getLoanId(),
-                    event.getAmount());
+                    event.getAmount(),
+                    null);
         }
     }
 
-    private void post(String eventIdRaw, String eventType, String loanId, MoneyAmount amount) {
+    private void post(
+            String eventIdRaw,
+            String eventType,
+            String loanId,
+            MoneyAmount amount,
+            String externalReference) {
         UUID eventId = UUID.fromString(eventIdRaw);
         Currency currency = Currency.getInstance(amount.getCurrency());
-        idempotent.process(
-                eventId,
-                TOPIC,
-                () ->
-                        postService.post(
-                                new PostingRequest(
-                                        eventType,
-                                        eventId,
-                                        loanId,
-                                        null,
-                                        currency,
-                                        Map.of(
-                                                "amount",
-                                                Money.of(amount.getMinorUnits(), currency)))));
+        Money money = Money.of(amount.getMinorUnits(), currency);
+        PostingRequest request =
+                new PostingRequest(
+                        eventType, eventId, loanId, null, currency, Map.of("amount", money));
+        if (externalReference != null) {
+            request = request.withExternal(externalReference, money);
+        }
+        PostingRequest toPost = request;
+        idempotent.process(eventId, TOPIC, () -> postService.post(toPost));
     }
 }

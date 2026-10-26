@@ -90,6 +90,44 @@ public class OutboxLedgerEventPublisher implements LedgerEventPublisher {
         append(meta, reconRunId, event);
     }
 
+    @Override
+    public void bankRailReconCompleted(
+            java.util.UUID runId,
+            String currencyCode,
+            com.lms.ledger.domain.recon.ReconResult result) {
+        String reconRunId = runId.toString();
+        EventMeta meta = meta("ledger.recon-completed", reconRunId);
+        LedgerReconCompleted event =
+                LedgerReconCompleted.newBuilder()
+                        .setMetadata(EventMetadataMapper.toAvro(meta))
+                        .setReconRunId(reconRunId)
+                        .setCurrency(currencyCode)
+                        .setDiffMinorUnits(0L)
+                        .setBalanced(result.isClean())
+                        .setRunAt(clock.instant())
+                        .setReconType("BANK_RAIL")
+                        .setMatched(
+                                result.count(
+                                        com.lms.ledger.domain.recon.ReconClassification.MATCHED))
+                        .setMissingInLedger(
+                                result.count(
+                                        com.lms.ledger.domain.recon.ReconClassification
+                                                .MISSING_IN_LEDGER))
+                        .setMissingInBank(
+                                result.count(
+                                        com.lms.ledger.domain.recon.ReconClassification
+                                                .MISSING_IN_BANK))
+                        .setAmountMismatch(
+                                result.count(
+                                        com.lms.ledger.domain.recon.ReconClassification
+                                                .AMOUNT_MISMATCH))
+                        .setDuplicate(
+                                result.count(
+                                        com.lms.ledger.domain.recon.ReconClassification.DUPLICATE))
+                        .build();
+        append(meta, reconRunId, event);
+    }
+
     private EventMeta meta(String eventType, String aggregateId) {
         return EventMeta.newEvent(
                 clock,

@@ -1,12 +1,15 @@
 package com.lms.ledger.config;
 
 import com.lms.events.AvroEventSerde;
+import com.lms.ledger.application.BankRailReconciliationService;
 import com.lms.ledger.application.LedgerQueryService;
 import com.lms.ledger.application.PostEntryService;
 import com.lms.ledger.application.ReconciliationService;
 import com.lms.ledger.application.ReverseEntryService;
+import com.lms.ledger.application.port.out.ExternalReconFeed;
 import com.lms.ledger.application.port.out.JournalEntryRepository;
 import com.lms.ledger.application.port.out.LedgerEventPublisher;
+import com.lms.ledger.application.port.out.ReconRunRepository;
 import com.lms.ledger.domain.PostingTemplateRegistry;
 import com.lms.outbox.OutboxRepository;
 import com.lms.outbox.inbox.IdempotentConsumer;
@@ -76,5 +79,17 @@ public class LedgerConfig {
             LedgerEventPublisher publisher,
             @Value("${lms.currency.default:INR}") String currencyCode) {
         return new ReconciliationService(entries, publisher, currencyCode);
+    }
+
+    @Bean
+    public BankRailReconciliationService bankRailReconciliationService(
+            ExternalReconFeed feed,
+            JournalEntryRepository entries,
+            ReconRunRepository runs,
+            LedgerEventPublisher publisher,
+            @Value("${lms.currency.default:INR}") String currencyCode,
+            Clock clock) {
+        return new BankRailReconciliationService(
+                feed, entries, runs, publisher, currencyCode, clock);
     }
 }

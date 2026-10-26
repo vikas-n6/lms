@@ -33,7 +33,34 @@ public record JournalEntry(
         String loanId,
         String customerId,
         UUID reversesEntryId,
-        Instant occurredAt) {
+        Instant occurredAt,
+        String externalReference,
+        Long externalAmountMinor) {
+
+    /** Entry without an external (bank/rail) reference — the common internal case. */
+    public JournalEntry(
+            UUID id,
+            UUID sourceEventId,
+            String sourceEventType,
+            Currency currency,
+            List<Posting> postings,
+            String loanId,
+            String customerId,
+            UUID reversesEntryId,
+            Instant occurredAt) {
+        this(
+                id,
+                sourceEventId,
+                sourceEventType,
+                currency,
+                postings,
+                loanId,
+                customerId,
+                reversesEntryId,
+                occurredAt,
+                null,
+                null);
+    }
 
     public JournalEntry {
         Objects.requireNonNull(id, "id");

@@ -51,22 +51,22 @@ public class DisbursementLedgerListener {
                                             Map.of("net", money(e.getNetAmount())))));
         } else if (payload instanceof DisbursementSucceeded e) {
             UUID eventId = UUID.fromString(e.getMetadata().getEventId());
-            idempotent.process(
-                    eventId,
-                    TOPIC,
-                    () ->
-                            postService.post(
-                                    new PostingRequest(
-                                            "disbursement.succeeded",
-                                            eventId,
-                                            e.getLoanId(),
-                                            null,
-                                            currency(e.getPrincipal()),
-                                            Map.of(
-                                                    "principal", money(e.getPrincipal()),
-                                                    "net", money(e.getNetAmount()),
-                                                    "fee", money(e.getFee()),
-                                                    "gst", money(e.getGst())))));
+            // The payout left the operating account under this UTR for the net amount; tag the
+            // entry for the bank/rail reconciliation (phase prompt task 6).
+            PostingRequest request =
+                    new PostingRequest(
+                                    "disbursement.succeeded",
+                                    eventId,
+                                    e.getLoanId(),
+                                    null,
+                                    currency(e.getPrincipal()),
+                                    Map.of(
+                                            "principal", money(e.getPrincipal()),
+                                            "net", money(e.getNetAmount()),
+                                            "fee", money(e.getFee()),
+                                            "gst", money(e.getGst())))
+                            .withExternal(e.getRailReference(), money(e.getNetAmount()));
+            idempotent.process(eventId, TOPIC, () -> postService.post(request));
         } else if (payload instanceof DisbursementFailed e) {
             UUID eventId = UUID.fromString(e.getMetadata().getEventId());
             idempotent.process(

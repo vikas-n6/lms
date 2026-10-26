@@ -79,6 +79,11 @@ final class LedgerFakes {
         public List<JournalEntry> findAll() {
             return List.copyOf(saved);
         }
+
+        @Override
+        public List<com.lms.ledger.domain.recon.ReconLine> reconLines(LocalDate date) {
+            return List.of();
+        }
     }
 
     static final class RecordingPublisher implements LedgerEventPublisher {
@@ -99,6 +104,12 @@ final class LedgerFakes {
         public void trialBalanceBroken(long diffMinorUnits, String currencyCode) {
             this.lastBrokenDiff = diffMinorUnits;
             events.add("ledger.trial-balance-broken:" + diffMinorUnits);
+        }
+
+        @Override
+        public void bankRailReconCompleted(
+                UUID runId, String currencyCode, com.lms.ledger.domain.recon.ReconResult result) {
+            events.add("ledger.recon-completed:BANK_RAIL:clean=" + result.isClean());
         }
     }
 }

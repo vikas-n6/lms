@@ -9,6 +9,7 @@ import com.lms.ledger.domain.AccountCode;
 import com.lms.ledger.domain.JournalEntry;
 import com.lms.ledger.domain.Posting;
 import com.lms.ledger.domain.PostingSide;
+import com.lms.ledger.domain.recon.ReconLine;
 import com.lms.money.Money;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -50,6 +51,10 @@ public class JooqJournalEntryRepository implements JournalEntryRepository {
             field(name("reverses_entry_id"), UUID.class);
     private static final org.jooq.Field<OffsetDateTime> E_OCCURRED =
             field(name("occurred_at"), OffsetDateTime.class);
+    private static final org.jooq.Field<String> E_EXT_REF =
+            field(name("external_reference"), String.class);
+    private static final org.jooq.Field<Long> E_EXT_AMT =
+            field(name("external_amount_minor"), Long.class);
 
     private static final org.jooq.Field<UUID> P_ID = field(name("id"), UUID.class);
     private static final org.jooq.Field<UUID> P_ENTRY = field(name("journal_entry_id"), UUID.class);
@@ -91,7 +96,9 @@ public class JooqJournalEntryRepository implements JournalEntryRepository {
                         E_LOAN,
                         E_CUSTOMER,
                         E_REVERSES,
-                        E_OCCURRED)
+                        E_OCCURRED,
+                        E_EXT_REF,
+                        E_EXT_AMT)
                 .values(
                         entry.id(),
                         entry.sourceEventId(),
@@ -100,7 +107,9 @@ public class JooqJournalEntryRepository implements JournalEntryRepository {
                         entry.loanId(),
                         entry.customerId(),
                         entry.reversesEntryId(),
-                        entry.occurredAt().atOffset(ZoneOffset.UTC))
+                        entry.occurredAt().atOffset(ZoneOffset.UTC),
+                        entry.externalReference(),
+                        entry.externalAmountMinor())
                 .execute();
         for (Posting posting : entry.postings()) {
             dsl.insertInto(POSTINGS)
@@ -200,6 +209,26 @@ public class JooqJournalEntryRepository implements JournalEntryRepository {
                 e.get(E_LOAN),
                 e.get(E_CUSTOMER),
                 e.get(E_REVERSES),
-                e.get(E_OCCURRED).toInstant());
+                e.get(E_OCCURRED).toInstant(),
+                e.get(E_EXT_REF),
+                e.get(E_EXT_AMT));
+    }
+
+    @Override
+    public List<ReconLine> reconLines(LocalDate date) {
+        return dsl.select(E_EXT_REF, E_EXT_AMT, E_CURRENCY)
+                .from(ENTRIES)
+                .where(E_EXT_REF.isNotNull())
+                .and(E_EXT_AMT.isNotNull())
+                .and(E_OCCURRED.ge(date.atStartOfDay().atOffset(ZoneOffset.UTC)))
+                .and(E_OCCURRED.lt(date.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC)))
+                .fetch()
+                .map(
+                        r ->
+                                new ReconLine(
+                                        r.get(E_EXT_REF),
+                                        Money.of(
+                                                r.get(E_EXT_AMT),
+                                                Currency.getInstance(r.get(E_CURRENCY)))));
     }
 }

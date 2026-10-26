@@ -63,7 +63,9 @@ public class PostEntryService {
                         request.loanId(),
                         request.customerId(),
                         null,
-                        clock.instant());
+                        clock.instant(),
+                        request.externalReference(),
+                        request.externalAmountMinor());
         entries.save(entry);
         publisher.entryPosted(entry);
         return Optional.of(entry);
