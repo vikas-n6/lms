@@ -13,7 +13,11 @@ const navItems = [
   { to: "/disbursements", label: "Disbursements" },
   { to: "/repayments", label: "Repayments" },
   { to: "/mandates", label: "Mandates" },
+  { to: "/collections", label: "Collections" },
+  { to: "/write-offs", label: "Write-offs" },
+  { to: "/notifications", label: "Notifications" },
   { to: "/ledger", label: "Ledger" },
+  { to: "/reconciliation", label: "Reconciliation" },
   { to: "/simulators", label: "Simulators" },
 ];
 

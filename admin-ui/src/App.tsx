@@ -15,6 +15,11 @@ import { LedgerPage } from "./pages/LedgerPage";
 import { DisbursementsPage } from "./pages/DisbursementsPage";
 import { RepaymentsPage } from "./pages/RepaymentsPage";
 import { MandatesPage } from "./pages/MandatesPage";
+import { CollectionsPage } from "./pages/CollectionsPage";
+import { CaseDetailPage } from "./pages/CaseDetailPage";
+import { WriteOffsPage } from "./pages/WriteOffsPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
+import { ReconciliationPage } from "./pages/ReconciliationPage";
 
 export default function App() {
   return (
@@ -35,6 +40,11 @@ export default function App() {
           <Route path="/disbursements" element={<DisbursementsPage />} />
           <Route path="/repayments" element={<RepaymentsPage />} />
           <Route path="/mandates" element={<MandatesPage />} />
+          <Route path="/collections" element={<CollectionsPage />} />
+          <Route path="/collections/:id" element={<CaseDetailPage />} />
+          <Route path="/write-offs" element={<WriteOffsPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/reconciliation" element={<ReconciliationPage />} />
           <Route path="/simulators" element={<SimulatorPage />} />
         </Routes>
       </AppShell>
