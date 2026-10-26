@@ -16,7 +16,17 @@ public class SimConfigRegistry {
 
     /** The simulators with a control surface. */
     public static final List<String> SIMULATORS =
-            List.of("bureau", "kyc", "bank", "sms", "rail", "mandate", "payments");
+            List.of(
+                    "bureau",
+                    "kyc",
+                    "bank",
+                    "sms",
+                    "rail",
+                    "mandate",
+                    "payments",
+                    "email",
+                    "push",
+                    "whatsapp");
 
     private final Map<String, SimulatorConfig> configs = new ConcurrentHashMap<>();
     private final Map<String, Random> randoms = new ConcurrentHashMap<>();

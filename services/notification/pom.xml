@@ -36,6 +36,22 @@
       <groupId>com.lms</groupId>
       <artifactId>lms-observability</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lms</groupId>
+      <artifactId>lms-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>

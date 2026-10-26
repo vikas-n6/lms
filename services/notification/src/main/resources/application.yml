@@ -1,14 +1,21 @@
 spring:
   application:
     name: notification
+  threads:
+    virtual:
+      enabled: true
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/notification}
     username: ${DB_USER:notification}
     password: ${DB_PASSWORD:notification}
   flyway:
     enabled: true
-    # Only the shared inbox migration is needed for the Phase 1 stub.
-    locations: classpath:db/migration/outbox
+    locations: classpath:db/migration,classpath:db/migration/outbox
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/lms}
 
 server:
   port: ${SERVER_PORT:8109}
@@ -20,7 +27,33 @@ lms:
   sim:
     base-url: ${SIM_BASE_URL:http://localhost:8190}
   notification:
-    ops-recipient: ${NOTIFICATION_OPS_RECIPIENT:ops}
+    max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
+    quiet-start-hour: ${NOTIFICATION_QUIET_START:21}
+    quiet-end-hour: ${NOTIFICATION_QUIET_END:8}
+    zone: ${NOTIFICATION_ZONE:Asia/Kolkata}
+    # Versioned templates with {placeholder} tokens (CLAUDE.md: texts never hard-coded in Java).
+    templates:
+      - { id: application.offered,   channel: SMS,      version: 1, body: "Your loan offer is ready. Review it in the app." }
+      - { id: disbursement.failed,   channel: SMS,      version: 1, body: "We could not disburse your loan. Our team will reach out." }
+      - { id: loan.activated,        channel: SMS,      version: 1, body: "Your loan {loanNumber} is active. First instalment due {firstDueDate}." }
+      - { id: due.soon,              channel: SMS,      version: 1, body: "Reminder: instalment {instalmentNumber} of {loanNumber} ({amount}) is due on {dueDate}." }
+      - { id: repayment.received,    channel: SMS,      version: 1, body: "We received your payment of {amount}. Thank you." }
+      - { id: repayment.reversed,    channel: SMS,      version: 1, body: "Your payment of {amount} was reversed ({reason})." }
+      - { id: mandate.failed,        channel: SMS,      version: 1, body: "Auto-debit failed ({failureCode}) for the instalment due {dueDate}." }
+      - { id: collections.reminder,  channel: SMS,      version: 1, body: "Your loan {loanNumber} is overdue. Please pay to avoid charges." }
+      - { id: collections.whatsapp,  channel: WHATSAPP, version: 1, body: "Your loan {loanNumber} is overdue. Tap to pay now." }
+      - { id: loan.closed,           channel: SMS,      version: 1, body: "Your loan {loanNumber} is fully paid and closed. Thank you." }
+    # Trigger event type -> template ids to send (channels follow from each template).
+    routes:
+      application.offered: [application.offered]
+      disbursement.failed: [disbursement.failed]
+      loan.activated: [loan.activated]
+      loan.installment-due-soon: [due.soon]
+      repayment.received: [repayment.received]
+      repayment.reversed: [repayment.reversed]
+      mandate.debit-failed: [mandate.failed]
+      collections.reminder-due: [collections.reminder, collections.whatsapp]
+      loan.closed: [loan.closed]
 
 management:
   endpoint:
