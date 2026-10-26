@@ -1,0 +1,22 @@
+{
+  "type": "record",
+  "name": "AuditEvent",
+  "namespace": "com.lms.contracts.audit",
+  "doc": "Published on audit.events (docs/architecture.md: Phase 5 adds this topic, keyed by actor id) by lms-security for every admin action, consumed and stored by the reporting service (ADR 0014). Carries who, what, the target, a redacted before/after summary and the correlation id. Summaries are PII-free (CLAUDE.md 'Logging'): they describe the change (field names, versions, state transitions), never raw PII values. Keyed by actorId so one actor's actions keep order.",
+  "fields": [
+    { "name": "metadata", "type": "com.lms.contracts.events.EventMetadata" },
+    { "name": "actorId", "type": "string", "doc": "Authenticated subject that performed the action (JWT subject / RequestContext.userId)" },
+    { "name": "actorRoles", "type": "string", "default": "", "doc": "Comma-separated realm roles at action time; empty when unknown" },
+    { "name": "action", "type": "string", "doc": "e.g. product.version.created, loan.write-off.approved, dlt.replayed" },
+    { "name": "targetType", "type": "string", "doc": "Aggregate/entity kind the action touched, e.g. product, loan, dlt-topic" },
+    { "name": "targetId", "type": "string", "doc": "Id of the touched entity" },
+    { "name": "beforeSummary", "type": ["null", "string"], "default": null, "doc": "Redacted summary of prior state; null for a create" },
+    { "name": "afterSummary", "type": ["null", "string"], "default": null, "doc": "Redacted summary of new state; null for a delete/deny" },
+    { "name": "outcome", "type": "string", "default": "SUCCESS", "doc": "SUCCESS | DENIED | ERROR" },
+    {
+      "name": "recordedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" },
+      "doc": "UTC instant the action was recorded, from the injected Clock"
+    }
+  ]
+}
