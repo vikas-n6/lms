@@ -77,6 +77,21 @@ public class GatewaySecurityConfig {
                                         // Admin manual receipt is admin-only.
                                         .requestMatchers(HttpMethod.POST, "/api/repayments/manual")
                                         .hasRole("ADMIN")
+                                        // Write-off request + approval are admin-only; the
+                                        // two-person rule (distinct admins) is enforced in the
+                                        // service (phase prompt task 2).
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                "/api/write-off-requests/**",
+                                                "/api/loans/*/write-off-requests")
+                                        .hasRole("ADMIN")
+                                        // Collection case actions (assign/promise/escalate/resolve)
+                                        // are worked by admins and analyst agents.
+                                        .requestMatchers(HttpMethod.POST, "/api/collections/**")
+                                        .hasAnyRole("ADMIN", "ANALYST")
+                                        // Reconciliation resolve/adjust are admin-only.
+                                        .requestMatchers(HttpMethod.POST, "/api/recon/**")
+                                        .hasRole("ADMIN")
                                         // Admin ops (business date, job triggers, dev disbursement/
                                         // repayment) and ledger reversal are admin-only.
                                         .requestMatchers("/api/admin/**")

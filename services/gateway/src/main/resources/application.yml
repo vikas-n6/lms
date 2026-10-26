@@ -39,13 +39,25 @@ spring:
             - id: loan-account
               uri: ${LOAN_ACCOUNT_URI:http://localhost:8104}
               predicates:
-                - Path=/api/loans/**,/api/admin/jobs/**,/api/admin/loans/**
+                - Path=/api/loans/**,/api/admin/jobs/**,/api/admin/loans/**,/api/write-off-requests/**
               filters:
                 - RewritePath=/api/(?<segment>.*), /$\{segment}
             - id: ledger
               uri: ${LEDGER_URI:http://localhost:8108}
               predicates:
-                - Path=/api/journal-entries/**,/api/ledger/**
+                - Path=/api/journal-entries/**,/api/ledger/**,/api/recon/**,/api/admin/recon/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: collections
+              uri: ${COLLECTIONS_URI:http://localhost:8107}
+              predicates:
+                - Path=/api/collections/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: notification
+              uri: ${NOTIFICATION_URI:http://localhost:8109}
+              predicates:
+                - Path=/api/notifications/**
               filters:
                 - RewritePath=/api/(?<segment>.*), /$\{segment}
             - id: disbursement
@@ -90,6 +102,8 @@ lms:
       decision: ${DECISION_URI:http://localhost:8103}
       loan-account: ${LOAN_ACCOUNT_URI:http://localhost:8104}
       ledger: ${LEDGER_URI:http://localhost:8108}
+      collections: ${COLLECTIONS_URI:http://localhost:8107}
+      notification: ${NOTIFICATION_URI:http://localhost:8109}
       simulators: ${SIM_URI:http://localhost:8190}
 
 management:
