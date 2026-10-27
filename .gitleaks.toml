@@ -12,8 +12,9 @@ regexes = [
   '''local-dev-callback-secret''',
   '''gateway-secret''',          # dev Keycloak client secret for the gateway
   '''POSTGRES_PASSWORD:-postgres''',
-  # Per-service dev DB passwords equal the service name (see deploy/postgres-init).
-  '''(customer|origination|decision|loan_account|loan-account|disbursement|repayment|collections|ledger|notification|reporting)_DB_PASSWORD:-\1''',
+  # Per-service dev DB passwords equal the service name (see deploy/postgres-init). RE2 has no
+  # backreferences, so this is a plain pattern rather than ..._DB_PASSWORD:-\1.
+  '''[A-Z_]+_DB_PASSWORD:-[a-z_]+''',
 ]
 paths = [
   '''deploy/keycloak/.*realm.*\.json''', # the imported dev realm export (dev-only credentials)

@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Dependency vulnerability scan (Trivy fs)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.29.0
         with:
           scan-type: fs
           scan-ref: .
@@ -57,7 +57,7 @@ jobs:
       - name: Build a representative image (Jib -> local Docker)
         run: ./mvnw -B -ntp -pl services/gateway -am -DskipTests package jib:dockerBuild
       - name: Image scan (Trivy)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.29.0
         with:
           scan-type: image
           image-ref: lms/gateway:0.1.0-SNAPSHOT
