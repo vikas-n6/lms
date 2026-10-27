@@ -5,6 +5,7 @@ import { BusinessDateWidget } from "./BusinessDateWidget";
 
 const navItems = [
   { to: "/", label: "Status" },
+  { to: "/dashboards", label: "Dashboards" },
   { to: "/customers", label: "Customers" },
   { to: "/applications", label: "Applications" },
   { to: "/review-queue", label: "Review queue" },
@@ -18,6 +19,9 @@ const navItems = [
   { to: "/notifications", label: "Notifications" },
   { to: "/ledger", label: "Ledger" },
   { to: "/reconciliation", label: "Reconciliation" },
+  { to: "/product-config", label: "Product config" },
+  { to: "/audit", label: "Audit log" },
+  { to: "/dlt", label: "Dead letters" },
   { to: "/simulators", label: "Simulators" },
 ];
 

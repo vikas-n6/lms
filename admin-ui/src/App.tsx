@@ -20,6 +20,10 @@ import { CaseDetailPage } from "./pages/CaseDetailPage";
 import { WriteOffsPage } from "./pages/WriteOffsPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { ReconciliationPage } from "./pages/ReconciliationPage";
+import { DashboardsPage } from "./pages/DashboardsPage";
+import { ProductConfigPage } from "./pages/ProductConfigPage";
+import { AuditLogPage } from "./pages/AuditLogPage";
+import { DltViewerPage } from "./pages/DltViewerPage";
 
 export default function App() {
   return (
@@ -27,6 +31,10 @@ export default function App() {
       <AppShell>
         <Routes>
           <Route path="/" element={<StatusPage />} />
+          <Route path="/dashboards" element={<DashboardsPage />} />
+          <Route path="/product-config" element={<ProductConfigPage />} />
+          <Route path="/audit" element={<AuditLogPage />} />
+          <Route path="/dlt" element={<DltViewerPage />} />
           <Route path="/customers" element={<CustomerPage />} />
           <Route path="/applications" element={<ApplicationsPage />} />
           <Route path="/applications/new" element={<NewApplicationPage />} />
