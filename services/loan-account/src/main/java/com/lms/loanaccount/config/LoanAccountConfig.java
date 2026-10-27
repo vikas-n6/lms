@@ -69,6 +69,26 @@ public class LoanAccountConfig {
     }
 
     @Bean
+    public ProductCatalog productCatalog(
+            com.lms.loanaccount.application.port.out.ProductRepository products,
+            BusinessCalendar calendar,
+            @Value("${lms.product.id:MICRO-V1}") String productId) {
+        return new com.lms.loanaccount.adapters.out.product.DbProductCatalog(
+                products, calendar, productId);
+    }
+
+    @Bean
+    public com.lms.loanaccount.application.ProductAdminService productAdminService(
+            com.lms.loanaccount.application.port.out.ProductRepository products,
+            BusinessCalendar calendar,
+            com.lms.security.audit.AuditRecorder audit,
+            Clock clock,
+            @Value("${lms.product.id:MICRO-V1}") String productId) {
+        return new com.lms.loanaccount.application.ProductAdminService(
+                products, calendar, audit, clock, productId);
+    }
+
+    @Bean
     public CreateLoanService createLoanService(
             LoanRepository loans,
             ScheduleRepository schedules,
@@ -200,9 +220,11 @@ public class LoanAccountConfig {
             LoanEventPublisher publisher,
             BusinessCalendar calendar,
             Clock clock,
+            com.lms.security.audit.AuditRecorder audit,
             @Value("${lms.write-off.min-dpd:180}") int minDpd) {
         return new WriteOffService(
-                loans, schedules, requests, history, products, publisher, calendar, clock, minDpd);
+                loans, schedules, requests, history, products, publisher, calendar, clock, audit,
+                minDpd);
     }
 
     @Bean

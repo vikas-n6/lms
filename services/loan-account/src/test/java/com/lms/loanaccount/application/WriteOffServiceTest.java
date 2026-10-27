@@ -88,6 +88,7 @@ class WriteOffServiceTest {
                         publisher,
                         calendar,
                         CLOCK,
+                        entry -> {},
                         180);
     }
 

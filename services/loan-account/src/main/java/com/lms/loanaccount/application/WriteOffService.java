@@ -19,6 +19,10 @@ import com.lms.loanaccount.domain.LoanTransitionResult;
 import com.lms.loanaccount.domain.WriteOffRequest;
 import com.lms.loanaccount.domain.WriteOffRequestStatus;
 import com.lms.schedule.Product;
+import com.lms.security.audit.AuditEntry;
+import com.lms.security.audit.AuditOutcome;
+import com.lms.security.audit.AuditRecorder;
+import com.lms.security.audit.AuditSummary;
 import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
@@ -43,6 +47,7 @@ public class WriteOffService {
     private final LoanEventPublisher publisher;
     private final BusinessCalendar calendar;
     private final Clock clock;
+    private final AuditRecorder audit;
     private final int minDpd;
 
     public WriteOffService(
@@ -54,6 +59,7 @@ public class WriteOffService {
             LoanEventPublisher publisher,
             BusinessCalendar calendar,
             Clock clock,
+            AuditRecorder audit,
             int minDpd) {
         this.loans = Objects.requireNonNull(loans);
         this.schedules = Objects.requireNonNull(schedules);
@@ -63,6 +69,7 @@ public class WriteOffService {
         this.publisher = Objects.requireNonNull(publisher);
         this.calendar = Objects.requireNonNull(calendar);
         this.clock = Objects.requireNonNull(clock);
+        this.audit = Objects.requireNonNull(audit);
         if (minDpd < 0) {
             throw new IllegalArgumentException("minDpd must be non-negative");
         }
@@ -130,6 +137,22 @@ public class WriteOffService {
                 request.requestedBy(),
                 approver,
                 null);
+        audit.record(
+                AuditEntry.of(
+                        approver,
+                        "",
+                        "loan.write-off.approved",
+                        "loan",
+                        loan.id().toString(),
+                        AuditSummary.create()
+                                .with("state", moved.from().getClass().getSimpleName())
+                                .with("dpd", snapshot.daysPastDue())
+                                .render(),
+                        AuditSummary.create()
+                                .with("state", "WrittenOff")
+                                .with("requestId", requestId.toString())
+                                .render(),
+                        AuditOutcome.SUCCESS));
         return approved;
     }
 
@@ -148,6 +171,17 @@ public class WriteOffService {
         WriteOffRequest request = requireRequested(requestId);
         WriteOffRequest rejected = request.reject(decidedBy, note, clock.instant());
         requests.update(rejected);
+        // The note is admin free text (possible PII); the audit summary records only the outcome.
+        audit.record(
+                AuditEntry.of(
+                        decidedBy,
+                        "",
+                        "loan.write-off.rejected",
+                        "loan",
+                        request.loanId().toString(),
+                        null,
+                        AuditSummary.create().with("status", "REJECTED").render(),
+                        AuditOutcome.SUCCESS));
         return rejected;
     }
 
