@@ -84,6 +84,7 @@
     <module>services/disbursement</module>
   <module>services/repayment</module>
   <module>services/collections</module>
+  <module>services/reporting</module>
 </modules>
 
   <dependencyManagement>
