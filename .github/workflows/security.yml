@@ -33,20 +33,21 @@ jobs:
 
   dependency-scan:
     runs-on: ubuntu-latest
+    env:
+      TRIVY_VERSION: v0.69.3
     steps:
       - uses: actions/checkout@v4
+      # Install the Trivy CLI directly (the trivy-action composite pins a setup-trivy tag that has
+      # been known to vanish; the CLI install is self-contained and reproducible).
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin "${TRIVY_VERSION}"
       - name: Dependency vulnerability scan (Trivy fs)
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          scanners: vuln
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: '1' # fail the build on a HIGH/CRITICAL dependency vulnerability
+        run: trivy fs --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
 
   image-scan:
     runs-on: ubuntu-latest
+    env:
+      TRIVY_VERSION: v0.69.3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -54,13 +55,9 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin "${TRIVY_VERSION}"
       - name: Build a representative image (Jib -> local Docker)
         run: ./mvnw -B -ntp -pl services/gateway -am -DskipTests package jib:dockerBuild
       - name: Image scan (Trivy)
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: image
-          image-ref: lms/gateway:0.1.0-SNAPSHOT
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: '1'
+        run: trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 lms/gateway:0.1.0-SNAPSHOT
