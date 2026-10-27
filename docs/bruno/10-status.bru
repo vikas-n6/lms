@@ -1,0 +1,12 @@
+meta {
+  name: Status
+  type: http
+  seq: 2
+}
+get {
+  url: {{baseUrl}}/api/status
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

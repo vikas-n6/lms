@@ -5,10 +5,35 @@ loan accounts, disbursement, repayment, collections, a double-entry ledger, and 
 personal learning project — regulations are mocked and every external party (bureau, KYC, payment
 rail, SMS) is a simulator we own. See `CLAUDE.md`, `docs/architecture.md` and `docs/domain-rules.md`.
 
-## Status — Phase 4 (Collections and operations)
+## Status — Phase 5 (Hardening)
 
-Phases 0–3 (foundations, origination, decisioning, loan core + ledger, money movement) plus Phase 4:
-delinquent loans move through DPD buckets, penal charges accrue, dunning runs as a durable workflow,
+Phases 0–4 (foundations, origination, decisioning, loan core + ledger, money movement, collections
+and operations) plus Phase 5: measured performance, proven failure behaviour, reporting read models,
+a security pass and operator-grade documentation — no new business features.
+
+- **`reporting` (8110)** consumes every domain topic into denormalised read models (rebuildable by
+  replaying from offset 0, ADR 0013) and serves the dashboards: portfolio snapshot (outstanding, DPD
+  distribution, NPA ratio), application funnel, collection efficiency and vintage curves, plus the
+  audit-log store. All aggregation is pure and test-first, in integer basis points (no BigDecimal).
+- **Audit events** — `lms-security` owns the audit domain + PII-free summary builder; each service
+  publishes `audit.events` through its own outbox (ADR 0014). Wired now for product-config changes
+  and write-off approve/reject; `reporting` stores them for the Audit log page.
+- **Product configuration** is database-backed and effective-dated: create a new version; existing
+  loans keep the version they were created under (no change to Money handling or the schedule engine).
+- **Gateway** adds the reporting/audit/product routes, a dashboard SSE fan-out (Redis pub/sub → SSE)
+  and a dead-letter viewer/replay for each `.dlt` topic.
+- **Admin UI** adds Dashboards (live via SSE + polling), Product config, Audit log and a DLT viewer.
+- **Hardening** is authored: k6 perf scripts with targets, a chaos driver + invariant checker, a
+  1,000-loan soak, a Kubernetes-readiness check, a STRIDE threat model, CI dependency/secret/image
+  scanning, versioned column-encryption key rotation (`KeyRing`, ADR 0016), Grafana operations
+  dashboard, an updated architecture diagram, the ADR index and a Bruno collection.
+
+The money- and state-critical core stays proven under `./mvnw clean verify` (now including the
+reporting aggregations, the audit factory, product-version state and the key-rotation crypto).
+
+### Earlier phases (Phase 4 and before)
+
+Delinquent loans move through DPD buckets, penal charges accrue, dunning runs as a durable workflow,
 notifications go out reliably, and a daily reconciliation compares the ledger with the simulated
 bank and rail reports.
 
@@ -38,12 +63,13 @@ transition, the penal/write-off ledger templates, the dunning workflow (proven i
 reconciliation matcher — is proven under `./mvnw clean verify`.
 
 > **Docker note:** the build machine has no container runtime, so container-dependent items
-> (Testcontainers `*IT`, the live Temporal/Kafka/Redis runs, the dunning crash/restart test,
-> `docker compose up`, the `scripts/e2e/phase*.sh` runs incl. `phase4.sh`, the k6 checks, the
-> outbox→Kafka relay, live channel delivery, Admin UI OIDC login) are **authored but not yet
+> (Testcontainers `*IT`, the live Temporal/Kafka/Redis runs, `docker compose up`, the
+> `scripts/e2e/phase*.sh` runs, the Phase 5 perf/chaos/soak/k8s scripts, the CI scan acceptance
+> proof, the reporting rebuild-from-0 check, Admin UI OIDC login) are **authored but not yet
 > executed**. They are tracked in `docs/backlog.md` and run in a session with Docker. The
-> `phase-3-done` and `phase-4-done` tags are withheld until they pass (the same discipline as the
-> earlier phases).
+> `phase-3-done`, `phase-4-done` and `phase-5-done`/`v1.0.0` tags are withheld until they pass (the
+> same discipline as the earlier phases). Phase 5 operator docs are in `docs/runbook.md`,
+> `docs/threat-model.md`, `docs/perf/`, `docs/chaos-report.md` and `docs/adr/`.
 
 ## Prerequisites
 

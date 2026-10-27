@@ -1,0 +1,12 @@
+meta {
+  name: Daily snapshots
+  type: http
+  seq: 8
+}
+get {
+  url: {{baseUrl}}/api/reporting/snapshots?limit=30
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

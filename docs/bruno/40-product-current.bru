@@ -1,0 +1,12 @@
+meta {
+  name: Product current
+  type: http
+  seq: 10
+}
+get {
+  url: {{baseUrl}}/api/admin/products/current
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

@@ -1,0 +1,12 @@
+meta {
+  name: DPD distribution
+  type: http
+  seq: 6
+}
+get {
+  url: {{baseUrl}}/api/reporting/dpd-distribution
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

@@ -154,3 +154,37 @@ real stack and settle the container-only items.
       reconciliation results) — authored and type-checked under `-Pui`; OIDC login + live data
       verified in Docker.
 - [ ] Tag `phase-4-done` once the Docker-session items above pass (mirrors the Phase 0–3 discipline).
+
+## Phase 5 (hardening) — deferred and known gaps
+
+Docker-independent Phase 5 work is built and `./mvnw clean verify`-green (reporting service, audit
+events, product-config versioning, key rotation, gateway routes/SSE/DLT, Admin UI pages, all
+scripts and docs). These remain for the Docker/CI session (mirrors Phases 0–4):
+
+- [ ] RUN perf (k6) `scripts/perf/*.js` and record baselines + before/after in `docs/perf/`; JFR
+      profile the top bottlenecks (`jfr` compose profile); run the GC / compact-headers / AOT matrix
+      and adopt the winner per service in the Jib `jvmFlags`, appending the choices to ADR 0015.
+- [ ] RUN every `scripts/chaos/chaos.sh` scenario, each followed by `scripts/verify-invariants.sh`;
+      fill in `docs/chaos-report.md`.
+- [ ] RUN `scripts/soak/soak.sh` (1,000 loans) and the invariant checker — zero violations required.
+- [ ] RUN `scripts/check-k8s-readiness.sh` (probes, non-root, env-only config, graceful SIGTERM).
+- [ ] Prove `reporting` rebuild-from-offset-0 yields identical figures to the live read models
+      (reset the `reporting` group offsets, truncate read tables, replay).
+- [ ] Security acceptance: prove CI fails on a deliberately introduced high-severity dependency and
+      on a planted secret (`.github/workflows/security.yml`), then remove both; audit a full e2e run's
+      logs for PII leakage (expect none); run the key-rotation dry-run on a copy of the data.
+- [ ] Schema Registry BACKWARD check for the new `audit.events` schema (`scripts/check-schema-compat.sh`).
+- [ ] Wire the dashboard Redis "ping": services (at minimum `reporting` on snapshot capture) publish
+      a lightweight change event on `lms:dashboard:events` so the gateway SSE pushes immediately; the
+      Admin UI already falls back to polling. Add a `DashboardNotifier` port + Redis adapter.
+- [ ] Expose the ledger trial-balance diff as a micrometer gauge `lms_ledger_trial_balance_diff` so
+      the Grafana stat panel and alerting read it directly (today it is an event + the invariant script).
+- [ ] Retrofit the `AuditRecorder` into the remaining admin endpoints (simulator control, DLT replay
+      in the gateway — needs an outbox-bearing home, reconciliation resolution, manual collection
+      actions). Product-config creation and write-off approve/reject are wired now (ADR 0014).
+- [ ] Optional mTLS profile: generate the dev CA + per-service certs, add the `mtls` compose profile
+      and the SSL env wiring (docs/threat-model.md); certificate issuance/rotation.
+- [ ] Generate the full Bruno/Postman collection from `contracts/.../openapi/gateway.yaml` with an
+      OpenAPI→Bruno tool; `docs/bruno/` holds a hand-authored collection of the key endpoints now.
+- [ ] Tag `phase-5-done` and `v1.0.0` once the Docker/CI items above pass (mirrors the Phase 0–4
+      discipline; `phase-3-done`/`phase-4-done` are created in the same session).

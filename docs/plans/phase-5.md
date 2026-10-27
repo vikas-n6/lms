@@ -89,6 +89,30 @@ Tag `phase-5-done` / `v1.0.0` only after those pass (mirrors Phases 0–4).
 - **No new business feature.** Reporting is read-only projection; audit is cross-cutting; product
   config versions an existing entity. New ideas → `docs/backlog.md`.
 
+## Progress log
+
+Done now, each `./mvnw clean verify`-green and committed as a slice:
+- Contracts: `audit.events` (`AuditEvent.avsc`). ADRs 0013–0016, ADR index.
+- `lms-security`: audit core (`AuditEntry`/`AuditOutcome`/`AuditSummary`/`AuditRecorder`, 10 tests);
+  `KeyRing` versioned key rotation (6 tests).
+- `reporting` service (8110): projections from every domain topic + audit, pure aggregations
+  (portfolio/funnel/collection-efficiency/vintage/DPD) in basis points, REST query API, daily
+  snapshot job, ArchUnit; 35 tests, coverage met.
+- `loan-account`: DB-backed effective-dated product versioning (`ProductRepository`,
+  `DbProductCatalog`, `ProductAdminService`, `ProductController`); audit wired into product-create
+  and write-off approve/reject; `ProductAdminServiceTest`.
+- `gateway`: reporting/audit/product routes, dashboard SSE fan-out, DLT viewer/replay, roles.
+- `admin-ui`: Dashboards, Product config, Audit log, DLT viewer (type-check + vite build green).
+- Scripts: `verify-invariants.sh`, `soak/soak.sh`, `chaos/chaos.sh`, `perf/*.js`,
+  `check-k8s-readiness.sh`; compose + postgres-init wired for reporting.
+- Security/docs: CI `security.yml` (gitleaks + Trivy) + `.gitleaks.toml`; `threat-model.md`;
+  runbook failure playbook + key-rotation procedure; Grafana ops dashboard + prometheus targets;
+  architecture diagram; `perf/README.md`; `chaos-report.md`; Bruno collection; README; backlog.
+
+Deferred to the Docker/CI session (see `docs/backlog.md` "Phase 5"): the perf/chaos/soak/k8s runs,
+GC/AOT matrix, CI scan acceptance proof, reporting rebuild-from-0, mTLS certs, the dashboard Redis
+ping, remaining audit wiring, and the `phase-5-done`/`v1.0.0` tags.
+
 ## Definition of done (now)
 
 `./mvnw clean verify` green incl. Spotless, enforcer, ArchUnit, coverage gates; test-first for the

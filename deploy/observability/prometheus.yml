@@ -11,6 +11,17 @@ scrape_configs:
   - job_name: lms-services
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ["customer:8101", "gateway:8080"]
+      - targets:
+          - "customer:8101"
+          - "origination:8102"
+          - "decision:8103"
+          - "loan-account:8104"
+          - "disbursement:8105"
+          - "repayment:8106"
+          - "collections:8107"
+          - "ledger:8108"
+          - "notification:8109"
+          - "reporting:8110"
+          - "gateway:8080"
         labels:
           system: lms

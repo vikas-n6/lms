@@ -60,6 +60,101 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/StatusReport' }
+  /api/reporting/portfolio:
+    get:
+      summary: Portfolio snapshot (counts, outstanding, DPD distribution, NPA ratio)
+      operationId: getPortfolio
+      responses:
+        '200': { description: Portfolio metrics }
+  /api/reporting/funnel:
+    get:
+      summary: Application funnel (submitted → approved → offered → accepted → disbursed)
+      operationId: getFunnel
+      responses:
+        '200': { description: Funnel counts and conversion rates (basis points) }
+  /api/reporting/collection-efficiency:
+    get:
+      summary: Collection efficiency (collected ÷ billed, basis points)
+      operationId: getCollectionEfficiency
+      responses:
+        '200': { description: Collection efficiency }
+  /api/reporting/dpd-distribution:
+    get:
+      summary: DPD bucket distribution
+      operationId: getDpdDistribution
+      responses:
+        '200': { description: Loan count per DPD bucket }
+  /api/reporting/vintage:
+    get:
+      summary: Vintage curves (30+ DPD by disbursal month)
+      operationId: getVintage
+      responses:
+        '200': { description: Vintage points ordered by month }
+  /api/reporting/snapshots:
+    get:
+      summary: Recent daily portfolio snapshots
+      operationId: getSnapshots
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 30 } }
+      responses:
+        '200': { description: Daily snapshot series, newest first }
+  /api/audit:
+    get:
+      summary: Filtered audit log
+      operationId: queryAudit
+      parameters:
+        - { name: actor, in: query, schema: { type: string } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: targetType, in: query, schema: { type: string } }
+        - { name: targetId, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 100 } }
+      responses:
+        '200': { description: Audit entries, newest first }
+  /api/admin/products/current:
+    get:
+      summary: Current product version in effect
+      operationId: getCurrentProduct
+      responses:
+        '200': { description: Current product version }
+  /api/admin/products:
+    get:
+      summary: All product versions
+      operationId: listProductVersions
+      responses:
+        '200': { description: Product versions, newest first }
+    post:
+      summary: Create a new effective-dated product version (admin)
+      operationId: createProductVersion
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: The created version }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/admin/dlt/{topic}:
+    get:
+      summary: List dead-letter records on a .dlt topic (admin)
+      operationId: listDlt
+      parameters:
+        - { name: topic, in: path, required: true, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+      responses:
+        '200': { description: Dead-letter records with failure headers }
+  /api/admin/dlt/{topic}/replay:
+    post:
+      summary: Replay a dead-letter record to its original topic (admin)
+      operationId: replayDlt
+      parameters:
+        - { name: topic, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: Replay result }
+        '404': { description: No such record }
+  /api/stream/dashboard:
+    get:
+      summary: Live dashboard updates (Server-Sent Events, admin/analyst)
+      operationId: streamDashboard
+      responses:
+        '200': { description: text/event-stream of dashboard change events }
 components:
   securitySchemes:
     bearerAuth:

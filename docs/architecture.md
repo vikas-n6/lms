@@ -130,3 +130,44 @@ Key format: `lms:{service}:{purpose}:{id}`. Every key has a TTL.
 | `full` | Everything above |
 
 Postgres init scripts create one database and one role per service. Roles can only access their own database.
+
+## System diagram (as of Phase 5)
+
+```mermaid
+flowchart LR
+  UI[Admin UI] -->|JWT| GW[Gateway 8080]
+  KC[Keycloak] -. OIDC .- GW
+  GW -->|REST, role-checked| CUS[customer]
+  GW --> ORI[origination]
+  GW --> DEC[decision]
+  GW --> LA[loan-account]
+  GW --> DIS[disbursement]
+  GW --> REP[repayment]
+  GW --> COL[collections]
+  GW --> LED[ledger]
+  GW --> NOT[notification]
+  GW --> REPT[reporting 8110]
+  GW -. SSE fan-out .- UI
+  SIM[simulators] -. signed callbacks .-> DIS & REP
+
+  subgraph Kafka [Kafka + Schema Registry]
+    T1((customer/application/decision.events))
+    T2((loan/disbursement/repayment.events))
+    T3((collections/ledger/notification.events))
+    AUD((audit.events))
+  end
+
+  CUS & ORI & DEC & LA & DIS & REP & COL & LED & NOT -->|outbox relay| Kafka
+  Kafka -->|inbox consumers| LA & DIS & REP & COL & LED & NOT & DEC & ORI
+  LA -->|audit on admin action| AUD
+  Kafka -->|all topics + audit, group=reporting, earliest| REPT
+  REPT --> RM[(read models: portfolio, funnel, collection, vintage, audit_log, recon_status)]
+
+  DIS -. Temporal .- TMP[Temporal]
+  COL -. Temporal .- TMP
+```
+
+Reporting is a pure consumer (owns only its read-model DB, rebuildable from offset 0, ADR 0013).
+`audit.events` (keyed by actor id) carries admin-action audit entries published through each
+service's outbox (ADR 0014) and is stored by reporting. The gateway fans out live dashboard updates
+to the Admin UI over SSE (Redis pub/sub source of truth remains Kafka).

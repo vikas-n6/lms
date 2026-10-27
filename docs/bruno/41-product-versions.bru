@@ -1,0 +1,12 @@
+meta {
+  name: Product versions
+  type: http
+  seq: 11
+}
+get {
+  url: {{baseUrl}}/api/admin/products
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

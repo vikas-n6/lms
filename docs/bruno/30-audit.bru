@@ -1,0 +1,12 @@
+meta {
+  name: Audit log
+  type: http
+  seq: 9
+}
+get {
+  url: {{baseUrl}}/api/audit?limit=100
+  auth: bearer
+}
+auth:bearer {
+  token: {{token}}
+}

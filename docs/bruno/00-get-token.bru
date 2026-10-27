@@ -1,0 +1,20 @@
+meta {
+  name: Get admin token
+  type: http
+  seq: 1
+}
+post {
+  url: {{keycloak}}/realms/lms/protocol/openid-connect/token
+  body: formUrlEncoded
+}
+body:form-urlencoded {
+  grant_type: password
+  client_id: gateway
+  client_secret: gateway-secret
+  username: admin
+  password: admin
+  scope: openid
+}
+docs {
+  Copy access_token from the response into the environment var `token`.
+}

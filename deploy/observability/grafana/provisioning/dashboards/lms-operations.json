@@ -1,0 +1,88 @@
+{
+  "uid": "lms-operations",
+  "title": "LMS Operations",
+  "tags": ["lms", "operations"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "Prometheus" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Service health (up)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }] }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "up{job=\"lms-services\"}", "legendFormat": "{{instance}}" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Kafka consumer lag (max records)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "refId": "A", "expr": "kafka_consumer_fetch_manager_records_lag_max", "legendFormat": "{{instance}}" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Outbox throughput (published vs dead-lettered /s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "description": "Publish rate from the outbox relay; a rising dead-letter rate means the relay cannot deliver. Pending-row backlog (outbox lag) is checked by scripts/verify-invariants.sh.",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (instance) (rate(lms_outbox_published_total[5m]))", "legendFormat": "published {{instance}}" },
+        { "refId": "B", "expr": "sum by (instance) (rate(lms_outbox_dead_lettered_total[5m]))", "legendFormat": "dead-lettered {{instance}}" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Dead-letter count (cumulative)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (instance) (lms_outbox_dead_lettered_total)", "legendFormat": "{{instance}}" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Temporal workflow failures /s",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "description": "Temporal SDK metrics (disbursement, collections workers). Metric name may vary by SDK version; adjust the expr to the exporter in use.",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "refId": "A", "expr": "rate(temporal_workflow_failed_total[5m])", "legendFormat": "{{workflow_type}}" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Ledger trial-balance diff (minor units)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 22 },
+      "description": "Must be 0. Exposed by the ledger trial-balance check as lms_ledger_trial_balance_diff (gauge); a non-zero value is an integrity alert.",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "green" }, { "value": 1, "color": "red" }, { "value": -1, "color": "red" }] } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "lms_ledger_trial_balance_diff", "legendFormat": "diff" }
+      ]
+    }
+  ]
+}

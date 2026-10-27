@@ -1,0 +1,13 @@
+apiVersion: 1
+
+# Loads the committed operations dashboards from disk (Phase 5 task 9). Grafana watches this folder.
+providers:
+  - name: lms
+    orgId: 1
+    folder: LMS
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false

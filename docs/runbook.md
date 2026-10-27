@@ -198,3 +198,78 @@ Debugging collections, notifications and reconciliation:
 - A reconciliation discrepancy → `GET /api/recon/runs/{id}/items`; resolve with a note or raise an
   adjusting entry via the reversal mechanism (`/api/recon/items/{id}/adjust`). The trial balance
   must still be zero afterwards.
+
+## Phase 5: hardening (Docker session)
+
+`reporting` (8110) joins the `apps`/`full` profiles. Build images (jib) and start as in earlier
+phases, then:
+
+```
+# Performance (record numbers in docs/perf/ before any optimisation — ADR 0015):
+k6 run -e BASE=http://localhost:8080 -e KC=http://localhost:8180 scripts/perf/app-to-decision.js
+k6 run -e BASE=http://localhost:8080 -e SECRET=local-dev-callback-secret scripts/perf/repayment-callback.js
+k6 run -e BASE=http://localhost:8080 -e KC=http://localhost:8180 scripts/perf/gateway-mixed-reads.js
+
+# Chaos (each scenario ends by running the invariant checker):
+scripts/chaos/chaos.sh all              # or: kill-kafka | kill-redis | kill-temporal | kill-db | pause | duplicate-storm | sim-flaky | sim-down
+scripts/verify-invariants.sh            # standalone invariant check
+
+# Soak (1,000 loans through compressed lifecycles, then invariants; zero violations required):
+SOAK_COUNT=1000 scripts/soak/soak.sh
+
+# Kubernetes readiness (probes, non-root, env-only config, graceful SIGTERM):
+scripts/check-k8s-readiness.sh
+```
+
+Grafana has an **LMS Operations** dashboard (provisioned from
+`deploy/observability/grafana/provisioning/dashboards/`): service health (`up`), Kafka consumer lag,
+outbox throughput (published vs dead-lettered), dead-letter counts, Temporal workflow failures and
+the ledger trial-balance diff. A Bruno collection for the gateway API is in `docs/bruno/` (import the
+folder; run **Get admin token** first, paste the token into the `local` environment).
+
+## Operator failure playbook
+
+- **Stuck disbursement** — a loan parked in `PendingDisbursal` or a disbursement in `MANUAL_REVIEW`.
+  Check `GET /api/disbursements/{id}`; the saga parks there when neither a callback nor status
+  polling established a terminal result (ADR 0010). Resolve by `POST /api/disbursements/{id}/retry`
+  (fresh attempt, same idempotency key — never double-pays) or `/cancel` (records FAILED, loan
+  cancelled, in-transit posting reversed). `scripts/verify-invariants.sh` flags any loan stuck past
+  the threshold.
+- **DLT growth** — the Dead-letter viewer (`/dlt` in the Admin UI, `GET /api/admin/dlt/{topic}`)
+  lists records with the exception class/message. Fix the cause, then **Replay** (re-produces to the
+  original topic preserving headers; the inbox dedups so a replay is safe). Watch the "Dead-letter
+  count" Grafana panel.
+- **Outbox lag** — the relay cannot publish (broker down or slow). The "Outbox throughput" panel
+  shows publish rate dropping; `scripts/verify-invariants.sh` reports unpublished rows per service.
+  The outbox grows while the broker is down and drains on recovery with no loss or duplication
+  (the aggregate change and the outbox row commit together). Check broker health and the relay logs.
+- **Ledger imbalance alert** — the trial-balance diff is non-zero (Grafana stat panel red; the
+  ledger publishes `ledger.recon-completed` with `balanced=false`). This must never happen in normal
+  operation. Do not edit ledger rows (append-only). Investigate the most recent entries
+  (`GET /api/ledger/loans/{loanId}`), find the unbalanced source event, and raise a correcting
+  reversal. `scripts/verify-invariants.sh` is the authoritative check.
+- **Reconciliation mismatch** — a bank/rail recon run classified lines as MISSING_IN_LEDGER /
+  MISSING_IN_BANK / AMOUNT_MISMATCH / DUPLICATE. `GET /api/recon/runs/{id}/items`; resolve with a
+  note or an adjusting reversal entry. The trial balance must stay zero afterwards.
+- **Temporal worker down** — disbursement/collections workflows pause (no progress on DPD ticks or
+  payout waits); the "Temporal workflow failures" panel and the Temporal UI (8233) show the state.
+  Workflows are durable: restart the service and they resume from where they parked, repeating no
+  completed activity (idempotent activities; `(caseId, stepId)` guard for dunning).
+
+## Column-encryption key rotation
+
+Column keys are versioned in a `KeyRing` (`lms-security`, ADR 0016); stored tokens are
+`<keyId>:<ciphertext>`. To rotate without downtime:
+
+1. Generate a new 256-bit key; add it to the services' key environment (e.g.
+   `LMS_CRYPTO_KEYS=v1:<base64>,v2:<base64>`) and set the current key id (`LMS_CRYPTO_CURRENT_KEY=v2`).
+   Deploy. New writes use v2; existing v1 rows stay readable (read-any).
+2. **Dry-run on a copy of the data first**: restore a snapshot of the service DB to a scratch
+   database, run the re-encryption job against it, and confirm every row decrypts and row counts are
+   unchanged.
+3. Run the re-encryption job on the live DB: for each PII row, `KeyRing.rotate(token)` re-encrypts
+   under v2 (a no-op for rows already v2, so the job is restartable and idempotent).
+4. When no v1-prefixed tokens remain, remove v1 from the environment and redeploy.
+
+Keys never live in Git; they come from the environment (CLAUDE.md). The rotation logic is unit-tested
+(`KeyRingTest`); the live rotation on a data copy is the Docker session's to run.
