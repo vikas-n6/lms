@@ -467,11 +467,37 @@ services:
       timeout: 5s
       retries: 20
 
+  reporting:
+    image: lms/reporting:0.1.0-SNAPSHOT
+    profiles: [apps, full]
+    <<: *restart
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      schema-registry: { condition: service_healthy }
+    environment:
+      SERVER_PORT: 8110
+      DB_URL: jdbc:postgresql://postgres:5432/reporting
+      DB_USER: reporting
+      DB_PASSWORD: ${REPORTING_DB_PASSWORD:-reporting}
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_BOOTSTRAP: kafka:19092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/lms
+      JAVA_TOOL_OPTIONS: "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=com.lms.contracts"
+    ports: ["8110:8110"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8110/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
   gateway:
     image: lms/gateway:0.1.0-SNAPSHOT
     profiles: [apps, full]
     <<: *restart
-    depends_on: [customer, origination, decision, loan-account, ledger, simulators, redis]
+    depends_on: [customer, origination, decision, loan-account, ledger, reporting, simulators, redis]
     environment:
       SERVER_PORT: 8080
       # dev profile enables the business-date admin endpoint (phase prompt task 1).
@@ -486,6 +512,8 @@ services:
       LEDGER_URI: http://ledger:8108
       COLLECTIONS_URI: http://collections:8107
       NOTIFICATION_URI: http://notification:8109
+      REPORTING_URI: http://reporting:8110
+      KAFKA_BOOTSTRAP: kafka:19092
       SIM_URI: http://simulators:8190
     ports: ["8080:8080"]
 
