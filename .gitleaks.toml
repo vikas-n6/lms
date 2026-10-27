@@ -1,0 +1,21 @@
+# gitleaks configuration (Phase 5 security pass). Extends the default rules and allowlists the
+# documented, intentionally-public local dev defaults so the scan fails on a REAL planted secret,
+# not on the safe placeholders this learning project ships (no real secrets are in Git — CLAUDE.md).
+title = "LMS gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Local dev defaults that are safe by design (overridden by env in any real deployment)"
+regexes = [
+  '''local-dev-callback-secret''',
+  '''gateway-secret''',          # dev Keycloak client secret for the gateway
+  '''POSTGRES_PASSWORD:-postgres''',
+  # Per-service dev DB passwords equal the service name (see deploy/postgres-init).
+  '''(customer|origination|decision|loan_account|loan-account|disbursement|repayment|collections|ledger|notification|reporting)_DB_PASSWORD:-\1''',
+]
+paths = [
+  '''deploy/keycloak/.*realm.*\.json''', # the imported dev realm export (dev-only credentials)
+  '''.*/application\.yml''',             # safe local defaults only; real config comes from env
+]

@@ -1,0 +1,66 @@
+name: Security
+
+# Phase 5 security pass (phase prompt task 7): dependency, secret and image scanning. The build must
+# fail on a high-severity dependency vulnerability and on a planted secret (proven once, then the
+# planted artifact removed). Separate from ci.yml so a scan-only change does not re-run the full IT.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 3 * * 1' # weekly, to catch newly disclosed CVEs in pinned deps
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks scans history, not just the tip
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency vulnerability scan (Trivy fs)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1' # fail the build on a HIGH/CRITICAL dependency vulnerability
+
+  image-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Build a representative image (Jib -> local Docker)
+        run: ./mvnw -B -ntp -pl services/gateway -am -DskipTests package jib:dockerBuild
+      - name: Image scan (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: image
+          image-ref: lms/gateway:0.1.0-SNAPSHOT
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
