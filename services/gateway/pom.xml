@@ -44,6 +44,12 @@
       <groupId>com.lms</groupId>
       <artifactId>lms-observability</artifactId>
     </dependency>
+    <!-- Kafka clients for the DLT viewer/replay (raw bytes + headers; no Avro needed). Within the
+         documented Kafka stack (CLAUDE.md), used only to read .dlt topics and re-produce records. -->
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
@@ -76,6 +82,10 @@
             <exclude>com/lms/gateway/config/*</exclude>
             <exclude>com/lms/gateway/status/RestClientServiceHealthProbe*</exclude>
             <exclude>com/lms/gateway/ratelimit/RedisRateLimiter*</exclude>
+            <!-- Broker/Redis/servlet-stream adapters: exercised against live infra in the Docker
+                 session, like the other adapters above. -->
+            <exclude>com/lms/gateway/dlt/*</exclude>
+            <exclude>com/lms/gateway/stream/*</exclude>
           </excludes>
         </configuration>
       </plugin>

@@ -39,7 +39,13 @@ spring:
             - id: loan-account
               uri: ${LOAN_ACCOUNT_URI:http://localhost:8104}
               predicates:
-                - Path=/api/loans/**,/api/admin/jobs/**,/api/admin/loans/**,/api/write-off-requests/**
+                - Path=/api/loans/**,/api/admin/jobs/**,/api/admin/loans/**,/api/write-off-requests/**,/api/admin/products/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - id: reporting
+              uri: ${REPORTING_URI:http://localhost:8110}
+              predicates:
+                - Path=/api/reporting/**,/api/audit/**
               filters:
                 - RewritePath=/api/(?<segment>.*), /$\{segment}
             - id: ledger
@@ -104,7 +110,12 @@ lms:
       ledger: ${LEDGER_URI:http://localhost:8108}
       collections: ${COLLECTIONS_URI:http://localhost:8107}
       notification: ${NOTIFICATION_URI:http://localhost:8109}
+      reporting: ${REPORTING_URI:http://localhost:8110}
       simulators: ${SIM_URI:http://localhost:8190}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  dashboard:
+    stream-channel: ${DASHBOARD_STREAM_CHANNEL:lms:dashboard:events}
 
 management:
   endpoint:

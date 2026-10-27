@@ -92,6 +92,14 @@ public class GatewaySecurityConfig {
                                         // Reconciliation resolve/adjust are admin-only.
                                         .requestMatchers(HttpMethod.POST, "/api/recon/**")
                                         .hasRole("ADMIN")
+                                        // Reporting dashboards, audit log and the live dashboard
+                                        // SSE stream are back-office only (admin + analyst), never
+                                        // the customer read rule below.
+                                        .requestMatchers(
+                                                "/api/reporting/**",
+                                                "/api/audit/**",
+                                                "/api/stream/**")
+                                        .hasAnyRole("ADMIN", "ANALYST")
                                         // Admin ops (business date, job triggers, dev disbursement/
                                         // repayment) and ledger reversal are admin-only.
                                         .requestMatchers("/api/admin/**")
