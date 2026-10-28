@@ -178,6 +178,7 @@
             <image>lms/origination:${project.version}</image>
           </to>
           <container>
+            <mainClass>com.lms.origination.OriginationApplication</mainClass>
             <user>1000:1000</user>
             <ports>
               <port>8102</port>

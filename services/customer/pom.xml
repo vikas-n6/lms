@@ -164,6 +164,7 @@
             <image>lms/customer:${project.version}</image>
           </to>
           <container>
+            <mainClass>com.lms.customer.CustomerApplication</mainClass>
             <user>1000:1000</user>
             <ports>
               <port>8101</port>

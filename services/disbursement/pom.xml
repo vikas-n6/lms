@@ -191,6 +191,7 @@
             <image>lms/disbursement:${project.version}</image>
           </to>
           <container>
+            <mainClass>com.lms.disbursement.DisbursementApplication</mainClass>
             <user>1000:1000</user>
             <ports>
               <port>8105</port>

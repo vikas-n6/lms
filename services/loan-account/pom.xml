@@ -183,6 +183,7 @@
             <image>lms/loan-account:${project.version}</image>
           </to>
           <container>
+            <mainClass>com.lms.loanaccount.LoanAccountApplication</mainClass>
             <user>1000:1000</user>
             <ports>
               <port>8104</port>

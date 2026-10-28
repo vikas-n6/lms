@@ -97,6 +97,7 @@
           <from><image>eclipse-temurin:25-jre</image></from>
           <to><image>lms/gateway:${project.version}</image></to>
           <container>
+            <mainClass>com.lms.gateway.GatewayApplication</mainClass>
             <user>1000:1000</user>
             <ports><port>8080</port></ports>
           </container>

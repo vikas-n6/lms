@@ -169,6 +169,7 @@
             <image>lms/reporting:${project.version}</image>
           </to>
           <container>
+            <mainClass>com.lms.reporting.ReportingApplication</mainClass>
             <user>1000:1000</user>
             <ports>
               <port>8110</port>
