@@ -57,7 +57,8 @@ jobs:
           cache: maven
       - name: Install Trivy
         run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin "${TRIVY_VERSION}"
+      # reporting has the jib-maven-plugin configured (gateway does not), so the jib: prefix resolves.
       - name: Build a representative image (Jib -> local Docker)
-        run: ./mvnw -B -ntp -pl services/gateway -am -DskipTests package jib:dockerBuild
+        run: ./mvnw -B -ntp -pl services/reporting -am -DskipTests package jib:dockerBuild
       - name: Image scan (Trivy)
-        run: trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 lms/gateway:0.1.0-SNAPSHOT
+        run: trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 lms/reporting:0.1.0-SNAPSHOT

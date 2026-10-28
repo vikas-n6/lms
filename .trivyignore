@@ -1,0 +1,9 @@
+# Trivy ignore list (Phase 5 security pass). Each entry is a triaged, justified exception — the
+# scan still fails the build on every other HIGH/CRITICAL, including a deliberately planted one.
+
+# lz4-java (at.yawk.lz4 fork) arbitrary-code-execution. This is an OPTIONAL transitive declared by
+# kafka-clients 4.3.1; it is not resolved onto any module's classpath (absent from the full
+# `mvn dependency:tree`), so it is not shipped in any image or jar. The fix (1.11.4) lives only in
+# the at.yawk.lz4 fork, which we do not depend on. Revisit if kafka-clients makes lz4 non-optional
+# or if we adopt LZ4 compression (we do not).
+CVE-2026-106451
