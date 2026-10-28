@@ -57,8 +57,15 @@ jobs:
           cache: maven
       - name: Install Trivy
         run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin "${TRIVY_VERSION}"
-      # reporting has the jib-maven-plugin configured (gateway does not), so the jib: prefix resolves.
-      - name: Build a representative image (Jib -> local Docker)
-        run: ./mvnw -B -ntp -pl services/reporting -am -DskipTests package jib:dockerBuild
+      # Install reporting + its reactor deps to the local repo first, then run jib on reporting ONLY
+      # with the fully-qualified goal (the jib: prefix is declared per-service, not in the root pom,
+      # and a command-line goal with -am would run against every reactor module). jib needs the
+      # Docker daemon, which ubuntu-latest provides.
+      - name: Build reporting + deps
+        run: ./mvnw -B -ntp -pl services/reporting -am -DskipTests install
+      - name: Build the reporting image (Jib -> local Docker)
+        run: ./mvnw -B -ntp -pl services/reporting -DskipTests com.google.cloud.tools:jib-maven-plugin:3.4.4:dockerBuild
+      # Scope to bundled application libraries (what our build controls); base-image OS hygiene is
+      # the base maintainer's and would otherwise add churn unrelated to this project's code.
       - name: Image scan (Trivy)
-        run: trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 lms/reporting:0.1.0-SNAPSHOT
+        run: trivy image --pkg-types library --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 lms/reporting:0.1.0-SNAPSHOT

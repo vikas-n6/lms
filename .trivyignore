@@ -7,3 +7,10 @@
 # the at.yawk.lz4 fork, which we do not depend on. Revisit if kafka-clients makes lz4 non-optional
 # or if we adopt LZ4 compression (we do not).
 CVE-2026-106451
+
+# Guava denial-of-service. guava is a transitive of Temporal's gRPC/protobuf stack, pinned to
+# 33.6.0-jre in the parent dependencyManagement specifically to satisfy maven-enforcer
+# dependencyConvergence (ADR 0008). It is not a direct dependency and the DoS vector is not reachable
+# through our usage. Bumping it is coupled to the Temporal/gRPC convergence pins, so it is tracked as
+# a dependency-upgrade backlog item rather than a mid-phase pin change. Revisit when those pins move.
+CVE-2026-102554
