@@ -188,3 +188,16 @@ scripts and docs). These remain for the Docker/CI session (mirrors Phases 0–4)
       OpenAPI→Bruno tool; `docs/bruno/` holds a hand-authored collection of the key endpoints now.
 - [ ] Tag `phase-5-done` and `v1.0.0` once the Docker/CI items above pass (mirrors the Phase 0–4
       discipline; `phase-3-done`/`phase-4-done` are created in the same session).
+
+### Phase 5 security scanning — framework CVEs and gate design (follow-ups)
+
+- [ ] Upgrade the Spring Boot BOM (and thereby tomcat-embed-core, jackson, netty, …) to clear the
+      HIGH/CRITICAL framework CVEs the Trivy **image scan** reports. The image scan is currently
+      report-only (informational) in `.github/workflows/security.yml`; the fs dependency scan and
+      secret scan are the hard gates. Make the image scan fail-on-HIGH/CRITICAL once the framework
+      CVEs are remediated (and base-image OS CVEs are addressed by rebasing).
+- [ ] Revisit the two `.trivyignore` baselines when their upstreams move: guava (CVE-2026-102554,
+      coupled to the Temporal/gRPC convergence pins, ADR 0008) and the optional `at.yawk.lz4:lz4-java`
+      fork (CVE-2026-106451, not resolved onto any classpath).
+- [ ] Run the planted-vulnerability and planted-secret acceptance demonstration once (prove the
+      dependency scan and gitleaks fail, then remove the planted artifacts).
